@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="パスワードをキーボード座標上に可視化し、歩きや直線・反復などのパターンを検出。複数パスワードから癖プロファイルも抽出します。">
+  <title>KeyWalk Analyzer - キーボード依存パスワード分析ツール</title>
+
+  <!-- セキュリティヘッダー -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="no-referrer">
+
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-top">
+        <h1>KeyWalk Analyzer</h1>
+        <button id="theme-toggle" class="theme-btn" aria-label="テーマ切り替え">
+          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="meta">
+        パスワードをキーボード座標上に可視化し、歩きや直線・反復などのパターンを検出。複数パスワードから癖プロファイルも抽出します。<br>
+        <strong>⚠️ 重要：</strong>ブラウザー内完結で処理され、入力データは一切送信・保存されません。ただし、<strong>実際に使用中のパスワードは入力しないでください。</strong>分析目的のサンプルや過去のパスワードをご使用ください。
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="分析モード選択">
+      <button id="tabbtn-single" class="active" role="tab" aria-selected="true" aria-controls="tab-single">単体分析</button>
+      <button id="tabbtn-profile" role="tab" aria-selected="false" aria-controls="tab-profile">癖プロファイル</button>
+    </div>
+
+    <!-- 単体分析 -->
+    <main id="tab-single" class="tab-pane active" role="tabpanel" aria-labelledby="tabbtn-single">
+      <div class="card">
+        <label for="pwd">パスワードを入力</label>
+        <textarea id="pwd" placeholder="例: qwerty123!" aria-describedby="hint-single"></textarea>
+
+        <div class="hint" id="hint-single">
+          <strong>⚠️ セキュリティ注意:</strong> 現在使用中のパスワードは絶対に入力しないでください。サンプルや過去のパスワードで分析してください。すべてブラウザー内で処理され、データは送信・保存されません。
+        </div>
+
+        <div class="controls">
+          <label class="small">レイアウト
+            <select id="layout" aria-label="キーボードレイアウト選択">
+              <option value="jis">JIS (日本語/簡易)</option>
+              <option value="qwerty">QWERTY (US)</option>
+              <option value="dvorak">Dvorak</option>
+            </select>
+          </label>
+          <label class="small">表示
+            <select id="mode" aria-label="表示モード選択">
+              <option value="path">経路（線）</option>
+              <option value="dots">点のみ</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="preset-group">
+          <div class="small">
+            サンプル:
+            <span class="help-icon" data-tooltip="選択中のキーボードレイアウトに最適化されたサンプル。クリックすると自動的に分析されます。レイアウトを変更するとサンプルの内容も変わります。">?</span>
+          </div>
+          <button class="preset-btn" data-preset="walk1">歩き①</button>
+          <button class="preset-btn" data-preset="walk2">歩き②</button>
+          <button class="preset-btn" data-preset="common">一般的</button>
+          <button class="preset-btn" data-preset="dict">辞書系</button>
+          <button class="preset-btn" data-preset="strong">良好例</button>
+        </div>
+
+        <div class="action-buttons">
+          <button id="analyze">分析する</button>
+          <button id="clear" class="secondary">クリア</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <canvas id="keyboard-canvas" width="1100" height="420" aria-label="keyboard plot"></canvas>
+      </div>
+
+      <div class="card results-section">
+        <h2 class="results-title">分析結果</h2>
+
+        <div class="kds-score-inline">
+          <div class="metric-single highlight">
+            <div class="label">
+              KDS（依存スコア）
+              <span class="help-icon" data-tooltip="キーボード依存度スコア（0-100）。60以上は要改善、40-59は注意、40未満は良好。隣接キー比率、方向エントロピー、直線性などから総合評価します。">?</span>
+            </div>
+            <div id="m-kds" class="value">-</div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">
+              ユニーク鍵数
+              <span class="help-icon" data-tooltip="パスワードで使用されている異なるキーの数。多いほど多様性が高くなります。">?</span>
+            </div>
+            <div id="m-unique" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              隣接キー比率
+              <span class="help-icon" data-tooltip="隣り合うキーへの移動の割合。70%以上だとキーボード歩きの可能性が高く、推測されやすくなります。">?</span>
+            </div>
+            <div id="m-adj" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              総移動距離(px)
+              <span class="help-icon" data-tooltip="キーボード上での指の移動距離の合計。距離が長いほど、キーが分散している傾向があります。">?</span>
+            </div>
+            <div id="m-length" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              方向転換回数
+              <span class="help-icon" data-tooltip="キー入力の移動方向が変わった回数。少ないと直線的な移動パターンを示します。">?</span>
+            </div>
+            <div id="m-turns" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              方向エントロピー H
+              <span class="help-icon" data-tooltip="移動方向の多様性を示す指標（0-3）。1.50未満だと方向に偏りがあり、パターンが予測されやすくなります。">?</span>
+            </div>
+            <div id="m-dirh" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              ステップCV
+              <span class="help-icon" data-tooltip="移動距離のばらつき度合い。0.25未満だと移動ステップが単調で規則的なパターンを示します。">?</span>
+            </div>
+            <div id="m-cv" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              ナイトムーブ比率
+              <span class="help-icon" data-tooltip="チェスのナイト（桂馬）のような不規則な移動の割合。高いほどランダム性があり、良好な傾向です。">?</span>
+            </div>
+            <div id="m-knight" class="value">-</div>
+          </div>
+        </div>
+
+        <div class="detected" id="detections">
+          <div class="label">検出されたパターン</div>
+          <ul id="d-list"></ul>
+        </div>
+      </div>
+
+      <div class="card guide">
+        <button class="guide-header accordion-toggle" id="accordion-single">
+          <strong>💡 セキュリティ専門家からのヒント</strong>
+          <span class="accordion-icon">▼</span>
+        </button>
+        <div class="accordion-content">
+          <div class="guide-section">
+            <div class="guide-title">🎯 総合評価（KDS）</div>
+            <ul>
+              <li><span class="guide-bad">60以上</span>：要改善 — キーボード依存が強く、推測攻撃に脆弱です</li>
+              <li><span class="guide-warn">40〜59</span>：注意 — いくつか改善の余地があります</li>
+              <li><span class="guide-good">40未満</span>：良好 — キーボード依存が低く、安全性が高いです</li>
+            </ul>
+          </div>
+          <div class="guide-section">
+            <div class="guide-title">📊 個別指標の目安</div>
+            <ul>
+              <li><strong>方向エントロピー（H）が1.50未満</strong>の場合<br>→ 移動方向に偏りがあり、パターンが予測されやすい状態です</li>
+              <li><strong>ステップCV（変動係数）が0.25未満</strong>の場合<br>→ 移動距離が単調で、規則的なパターンを示しています</li>
+              <li><strong>隣接キー比率が70%以上</strong>の場合<br>→ キーボード歩き（隣接キーの連続）に依存しており、推測されやすいです</li>
+            </ul>
+          </div>
+          <div class="guide-section">
+            <div class="guide-title">✅ 強いパスワードのポイント</div>
+            <ul>
+              <li>隣り合わないキーをランダムに組み合わせる</li>
+              <li>大文字・小文字・数字・記号を混在させる</li>
+              <li>辞書にある単語や連続したキーの並びを避ける</li>
+              <li>可能であればパスワードマネージャーで生成する</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- プロファイル -->
+    <main id="tab-profile" class="tab-pane" role="tabpanel" aria-labelledby="tabbtn-profile">
+      <div class="card">
+        <label for="pwds">複数パスワード（1行につき1つ）</label>
+        <textarea id="pwds" placeholder="例:
+Passw0rd!
+Tokyo2025!
+Qwerty!234
+Admin2024
+Hello123!"></textarea>
+
+        <div class="controls">
+          <label class="small">レイアウト
+            <select id="profile-layout" aria-label="キーボードレイアウト選択">
+              <option value="jis">JIS (日本語/簡易)</option>
+              <option value="qwerty">QWERTY (US)</option>
+              <option value="dvorak">Dvorak</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="preset-group">
+          <div class="small">
+            サンプル:
+            <span class="help-icon" data-tooltip="選択中のキーボードレイアウトに最適化されたサンプルセット。クリックすると複数のパスワードが読み込まれ、共通する傾向を抽出します。">?</span>
+          </div>
+          <button class="preset-btn-profile" data-preset="basic">基本</button>
+          <button class="preset-btn-profile" data-preset="year">年号</button>
+          <button class="preset-btn-profile" data-preset="keyboard">歩き</button>
+          <button class="preset-btn-profile" data-preset="random">良好</button>
+        </div>
+
+        <div class="action-buttons">
+          <button id="analyze-profile">癖を分析</button>
+          <button id="clear-profile" class="secondary">クリア</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <canvas id="profile-canvas" width="1100" height="420" aria-label="profile heatmap"></canvas>
+      </div>
+
+      <div class="card results-section">
+        <h2 class="results-title">分析結果</h2>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">
+              平均隣接比率
+              <span class="help-icon" data-tooltip="複数パスワードでの隣接キー使用率の平均。高いとキーボード歩きの癖がある可能性があります。">?</span>
+            </div>
+            <div id="pm-adj" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              平均方向転換
+              <span class="help-icon" data-tooltip="複数パスワードでの方向転換回数の平均。少ないと直線的な入力パターンの癖があります。">?</span>
+            </div>
+            <div id="pm-turns" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              平均移動距離(px)
+              <span class="help-icon" data-tooltip="複数パスワードでのキーボード上の移動距離の平均。キーの分散度を示します。">?</span>
+            </div>
+            <div id="pm-length" class="value">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">
+              使用キー種類
+              <span class="help-icon" data-tooltip="全パスワードで使用された異なるキーの総数。多様なキーを使う傾向があるかを示します。">?</span>
+            </div>
+            <div id="pm-uniq" class="value">-</div>
+          </div>
+        </div>
+
+        <div class="detected">
+          <div class="label">抽出された癖・傾向</div>
+          <ul id="traits-list"></ul>
+        </div>
+      </div>
+
+      <div class="card guide">
+        <button class="guide-header accordion-toggle" id="accordion-profile">
+          <strong>💡 セキュリティ専門家からのヒント</strong>
+          <span class="accordion-icon">▼</span>
+        </button>
+        <div class="accordion-content">
+          <div class="guide-section">
+            <div class="guide-title">🔍 ヒートマップの見方</div>
+            <ul>
+              <li><strong>濃い箇所</strong>：よく使うキーを示します</li>
+              <li><strong>偏りの確認</strong>：左右・上中下のどこに集中しているか注目しましょう</li>
+            </ul>
+          </div>
+          <div class="guide-section">
+            <div class="guide-title">🎭 検出される癖・パターン</div>
+            <ul>
+              <li><strong>末尾パターン</strong>：年号（2024など）、数字連続、記号連続（!!!など）</li>
+              <li><strong>先頭パターン</strong>：大文字で始まる、小文字連続、大文字連続</li>
+              <li><strong>よく使うキー</strong>：頻繁に登場するキーの組み合わせ</li>
+            </ul>
+          </div>
+          <div class="guide-section">
+            <div class="guide-title">⚠️ 危険な癖の例</div>
+            <ul>
+              <li>すべてのパスワードが「単語+年号+記号」の形式</li>
+              <li>同じキーの組み合わせ（バイグラム）を繰り返し使用</li>
+              <li>キーボードの特定エリアに偏った使用</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="card">
+      <div>
+        🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/keywalk-analyzer" target="_blank">ipusiron/keywalk-analyzer</a> ）
+      </div>
+    </footer>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
