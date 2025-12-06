@@ -1,11 +1,38 @@
 <!--
 ---
-title: KeyWalk Analyzer
-category: password-analysis
+id: day089
+slug: keywalk-analyzer
+
+title: "KeyWalk Analyzer"
+
+subtitle_ja: "キーボード依存パスワード分析ツール"
+subtitle_en: "Keyboard-Dependent Password Analysis Tool"
+
+description_ja: "パスワードをキーボード座標上に可視化し、隣接キー歩きや直線移動などのパターンを検出。複数パスワードから入力の癖やプロファイルも抽出できる教育用セキュリティツール。"
+description_en: "Visualize password paths on keyboard layouts, detect walking patterns and linear movements. Extract typing habits and profiles from multiple passwords for security education."
+
+category_ja:
+  - パスワード分析
+  - パスワード解析
+category_en:
+  - Password Analysis
+  - Password Cracking
+
 difficulty: 3
-description: Visualize password paths on a keyboard, detect walking patterns, and profile user-specific typing habits.
-tags: [password, keyboard, visualization, analyzer, javascript]
-demo: https://ipusiron.github.io/keywalk-analyzer/
+
+tags:
+  - password
+  - keyboard-walking
+  - visualization
+  - canvas
+  - security
+  - profiling
+  - javascript
+
+repo_url: "https://github.com/ipusiron/keywalk-analyzer"
+demo_url: "https://ipusiron.github.io/keywalk-analyzer/"
+
+hub: true
 ---
 -->
 
