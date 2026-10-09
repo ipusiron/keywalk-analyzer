@@ -117,7 +117,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
   test(file + ': directory tree uses real paths, aligned comments and visible hierarchy', () => {
     const block = text.match(/```text\r?\n(keywalk-analyzer\/[\s\S]*?)\r?\n```/)[1];
     const lines = block.split(/\r?\n/), stack = [], found = [];
-    assert.equal(lines.length, 41);
+    assert.equal(lines.length, 43);
     assert.equal(new Set(lines.map(line => line.indexOf('#'))).size, 1);
     for (const line of lines.slice(1)) {
       const m = line.match(/^([│ ]*)(?:├── |└── )([^#]+?)\s+# .+$/);
@@ -129,7 +129,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
       if (name.endsWith('/')) stack.push(name.slice(0, -1));
       else found.push(relative);
     }
-    assert.equal(found.length, 35);
+    assert.equal(found.length, 37);
     const actual = [];
     // Ignored personal directories are not distributed project files.
     const ignoredDirs = new Set(read('.gitignore').split(/\r?\n/)

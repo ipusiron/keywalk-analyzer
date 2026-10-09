@@ -333,6 +333,7 @@ keywalk-analyzer/                      # Project root
 │   ├── format.test.js                 # Formatting and non-minification
 │   ├── messages.test.js               # JA/EN dictionary parity
 │   ├── readme.test.js                 # Bilingual examples, images, structure
+│   ├── samples.test.js                # Typical examples and random generation
 │   ├── security.test.js               # CSP, persistence, control structure
 │   ├── settings.test.js               # Initial preferences and storage denial
 │   └── ui.test.js                     # Layout and contrast
@@ -346,6 +347,7 @@ keywalk-analyzer/                      # Project root
 ├── SECURITY.md                        # Security measures and limits
 ├── index.html                         # Interface and meta CSP
 ├── keywalk-core.js                    # DOM-independent calculation
+├── keywalk-samples.js                 # Typical examples and random generation
 ├── keywalk-messages.js                # JA/EN analysis messages
 ├── keywalk-ui-messages.js             # JA/EN static text and attributes
 ├── package.json                       # Node.js test configuration

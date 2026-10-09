@@ -371,6 +371,7 @@ keywalk-analyzer/                      # プロジェクトルート
 │   ├── format.test.js                 # 整形・非圧縮の検査
 │   ├── messages.test.js               # 日英辞書の一致
 │   ├── readme.test.js                 # 日英の例・画像・構造
+│   ├── samples.test.js                # 典型例とランダム生成
 │   ├── security.test.js               # CSP・保存・操作の構造
 │   ├── settings.test.js               # 初期設定と保存拒否
 │   └── ui.test.js                     # 表示・コントラスト
@@ -384,6 +385,7 @@ keywalk-analyzer/                      # プロジェクトルート
 ├── SECURITY.md                        # 安全対策と限界
 ├── index.html                         # 画面とmeta CSP
 ├── keywalk-core.js                    # DOM非依存の計算
+├── keywalk-samples.js                 # 典型例とランダム生成
 ├── keywalk-messages.js                # 日英の分析メッセージ
 ├── keywalk-ui-messages.js             # 日英の本文・属性
 ├── package.json                       # Node.jsテスト設定

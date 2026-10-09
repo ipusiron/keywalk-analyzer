@@ -15,7 +15,7 @@ test('CSP restricts connections and executable resources; preferences run before
   assert.match(html, /<noscript>/);
 });
 test('runtime never sends or persists input and avoids HTML sinks', () => {
-  for (const file of ['script.js', 'keywalk-core.js', 'settings.js']) {
+  for (const file of ['script.js', 'keywalk-core.js', 'keywalk-samples.js', 'settings.js']) {
     const source = read(file);
     assert.doesNotMatch(source, /innerHTML|outerHTML|insertAdjacentHTML|\beval\s*\(|\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket/);
     for (const match of source.matchAll(/localStorage\.(?:getItem|setItem)\('([^']+)'/g)) {
