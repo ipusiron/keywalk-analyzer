@@ -243,16 +243,18 @@ Hello123!" autocomplete="off" autocapitalize="off" spellcheck="false" aria-descr
           </label>
         </div>
 
-        <div class="preset-group">
-          <div class="small">
-            サンプル:
-            <button type="button" class="help-icon" data-tooltip="サンプルを押すと複数の学習用文字列を読み込み、選択した配列で集計します。">?</button>
+        <details class="sample-panel learning-section" id="profile-learning-samples" open>
+          <summary id="profile-sample-heading"></summary>
+          <label id="profile-sample-label" for="profile-sample-select"></label>
+          <div class="sample-picker">
+            <select id="profile-sample-select" aria-describedby="profile-sample-preview-label profile-sample-preview profile-sample-note"></select>
+            <button type="button" id="load-profile-sample" class="secondary"></button>
           </div>
-          <button class="preset-btn-profile" data-preset="basic">基本</button>
-          <button class="preset-btn-profile" data-preset="year">年号</button>
-          <button class="preset-btn-profile" data-preset="keyboard">歩き</button>
-          <button class="preset-btn-profile" data-preset="random">混在例</button>
-        </div>
+          <p id="profile-sample-preview-label"></p>
+          <pre id="profile-sample-preview" class="sample-preview-lines"></pre>
+          <p id="profile-sample-note" class="hint"></p>
+          <p id="profile-sample-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+        </details>
 
         <div class="action-buttons">
           <button id="analyze-profile">癖を分析</button>

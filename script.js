@@ -2,6 +2,7 @@
 const Core = KeyWalkCore;
 const Samples = KeyWalkSamples;
 const sampleState = {notice: '', args: {}};
+let profileSampleNotice = '';
 const state = {single: null, comparison: null, profile: null, singleNotice: '', profileNotice: ''};
 const stepState = {steps: [], index: 0};
 const composing = {single: false, profile: false};
@@ -417,10 +418,11 @@ function renderCalculation() {
   body.append(textElement('p', t('reference')));
 }
 function renderAll() {
-  renderSingle(); renderProfile(); renderComparison(); renderCalculation(); renderSteps(); renderSamples(); drawResults();
+  renderSingle(); renderProfile(); renderComparison(); renderCalculation(); renderSteps(); renderSamples(); renderProfileSamples(); drawResults();
 }
 function invalidate(tab) {
   if (tab === 'single') sampleState.notice = '';
+  if (tab === 'profile') profileSampleNotice = '';
   if (tab === 'single') resetSingle(); else resetProfileMetrics();
   state[tab + 'Notice'] = 'dirty';
   renderAll();
@@ -488,6 +490,23 @@ const PRESETS_PROFILE = {
     'random': 'xK9#mQ2$vL\nR7@bN4!jX3\nM5&pW8*dF1\nT2#vK6@hL9\nY4$nC8!qZ7'
   }
 };
+
+function renderProfileSamples() {
+  const selector = document.getElementById('profile-sample-select'), selected = selector.value || 'basic';
+  selector.replaceChildren();
+  for (const id of ['basic', 'year', 'keyboard', 'random']) {
+    const option = textElement('option', t('profileSample_' + id));
+    option.value = id;
+    selector.append(option);
+  }
+  selector.value = selected;
+  for (const [id, key] of [['profile-sample-heading', 'sampleHeading'], ['profile-sample-label', 'profileSampleLabel'],
+    ['load-profile-sample', 'sampleLoad'], ['profile-sample-preview-label', 'profileSamplePreview'],
+    ['profile-sample-note', 'profileSampleNote']]) setText(id, t(key));
+  setText('profile-sample-preview', PRESETS_PROFILE[document.getElementById('profile-layout').value][selected]);
+  setText('profile-sample-feedback', profileSampleNotice ? t(profileSampleNotice) : '');
+  document.getElementById('load-profile-sample').disabled = composing.profile;
+}
 
 function bind(){
   document.getElementById('path-inspector').addEventListener('toggle', () => { drawResults(); scrollStepKey(); });
@@ -571,18 +590,18 @@ function bind(){
   document.getElementById('analyze-profile').addEventListener('click', analyzeProfile);
   document.getElementById('clear-profile').addEventListener('click', ()=>{
     document.getElementById('pwds').value=''; resetProfileMetrics();
+    profileSampleNotice = '';
     state.profileNotice = ''; renderAll();
   });
 
-  // プロファイルプリセット（レイアウト別）
-  document.querySelectorAll('.preset-btn-profile').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const preset = btn.getAttribute('data-preset');
-      const layout = document.getElementById('profile-layout').value;
-      const presetData = PRESETS_PROFILE[layout];
-      document.getElementById('pwds').value = presetData ? (presetData[preset] || '') : '';
-      analyzeProfile();
-    });
+  document.getElementById('profile-sample-select').addEventListener('change', renderProfileSamples);
+  document.getElementById('load-profile-sample').addEventListener('click', () => {
+    if (composing.profile) return;
+    const layout = document.getElementById('profile-layout').value;
+    const preset = document.getElementById('profile-sample-select').value;
+    document.getElementById('pwds').value = PRESETS_PROFILE[layout][preset];
+    profileSampleNotice = 'profileSampleLoaded';
+    analyzeProfile();
   });
 }
 
@@ -693,6 +712,7 @@ function initLocale() {
 (function init(){
   initLocale();
   renderSamples();
+  renderProfileSamples();
   initTheme();
   setupCanvas(canvas);
   setupCanvas(pcanvas);

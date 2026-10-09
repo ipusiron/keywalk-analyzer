@@ -3,6 +3,48 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const read = name => fs.readFileSync(path.join(__dirname,'..',name),'utf8');
+test('profile samples use an initially open native disclosure with preview and explicit load', () => {
+  const html = read('index.html');
+  const panel = html.match(/<details class="sample-panel learning-section" id="profile-learning-samples" open>([\s\S]*?)<\/details>/);
+  assert.ok(panel);
+  assert.match(panel[1], /^\s*<summary id="profile-sample-heading"><\/summary>/);
+  assert.match(panel[1], /for="profile-sample-select"/);
+  assert.match(panel[1], /<pre id="profile-sample-preview" class="sample-preview-lines"><\/pre>/);
+  assert.match(panel[1], /<button type="button" id="load-profile-sample"/);
+  assert.match(panel[1], /id="profile-sample-feedback" role="status" aria-live="polite" aria-atomic="true"/);
+  assert.doesNotMatch(panel[1], /id="(?:analyze-profile|clear-profile|generate-sample)"/);
+  assert.doesNotMatch(html, /preset-btn-profile/);
+  assert.match(read('style.css'), /\.sample-preview-lines\{white-space:pre-wrap;overflow-wrap:anywhere/);
+});
+test('all four profile sets preserve the exact five lines in every layout', () => {
+  const source = read('script.js').match(/const PRESETS_PROFILE = (\{[\s\S]*?\n\});/)[1];
+  const actual = require('node:vm').runInNewContext('(' + source + ')');
+  const shared = {
+    basic: 'Password123\nWelcome2024\nAdmin123\nLogin2024\nAccess123',
+    year: 'Tokyo2023!\nOsaka2024!\nKyoto2022!\nNagoya2025!\nSapporo2021!',
+    random: 'xK9#mQ2$vL\nR7@bN4!jX3\nM5&pW8*dF1\nT2#vK6@hL9\nY4$nC8!qZ7'
+  };
+  const walks = {qwerty:'qwerty12\nasdfgh34\nzxcvbn56\nqazwsx78\nwsxedc90',
+    jis:'qwertyui\nasdfghjk\nzxcvbnm\n1qaz2wsx\n3edc4rfv', dvorak:'aoeu\nhtns\n123456\npyfgcr\nqjkxbm'};
+  assert.deepEqual(Object.keys(actual).sort(), Object.keys(walks).sort());
+  for (const layout of Object.keys(walks)) {
+    assert.deepEqual(JSON.parse(JSON.stringify(actual[layout])), {...shared, keyboard:walks[layout]});
+    for (const value of Object.values(actual[layout])) assert.equal(value.split('\n').length, 5);
+  }
+});
+test('profile sample labels and limitations are present in both languages', () => {
+  const messages = require('../keywalk-messages.js');
+  for (const lang of ['ja', 'en']) {
+    for (const key of ['profileSampleLabel', 'profileSamplePreview', 'profileSampleNote', 'profileSampleLoaded',
+      'profileSample_basic', 'profileSample_year', 'profileSample_keyboard', 'profileSample_random']) {
+      assert.ok(messages[lang][key], lang + ': ' + key);
+    }
+  }
+  assert.equal(messages.ja.profileSample_random, '固定の混在例');
+  assert.equal(messages.en.profileSample_random, 'Fixed mixed example');
+  assert.match(messages.ja.profileSampleNote, /ランダム生成ではありません/);
+  assert.match(messages.en.profileSampleNote, /not randomly generated/);
+});
 test('learning samples use a native accordion that starts open and contains both sample controls', () => {
   const html = read('index.html');
   const panel = html.match(/<details class="sample-panel learning-section" id="learning-samples" open>([\s\S]*?)<\/details>/);

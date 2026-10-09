@@ -86,6 +86,9 @@ Generation is for learning, not authentication; independent selections may repea
 The grouped select only previews. Explicit load/generate replaces and analyzes single input, resetting step position without touching profile.
 Generation failure preserves input, models and step position. IME composition disables both buttons and is guarded in handlers.
 `renderSamples` preserves selections and translates feedback without generating or recalculating.
+Profile samples retain four fixed five-line sets in `PRESETS_PROFILE`. `renderProfileSamples` previews without loading.
+Both sample panels are native details, initially open; rendering preserves their open state and selections.
+Explicit profile loading affects only profile input/results, is guarded during IME composition, and never generates random strings.
 
 - Adjacency: different keys with absolute dx and dy at most 1
 - Walk: at least 3 consecutive adjacent keys, without crossing unknown input or same-key repeats
