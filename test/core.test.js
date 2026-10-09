@@ -3,6 +3,41 @@ const assert = require('node:assert/strict');
 const C = require('../keywalk-core.js');
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-10, `${a} != ${b}`);
 
+test('path steps retain original code-point positions, shift keys and every boundary', () => {
+  const r = C.analyze('Aa!😀 sd', 'jis'), before = structuredClone(r), steps = C.pathSteps(r);
+  assert.deepEqual(steps.map(s => s.char), Array.from('Aa!😀 sd'));
+  assert.deepEqual(steps.map(s => s.index), [0, 1, 2, 3, 4, 5, 6]);
+  assert.deepEqual(steps.map(s => s.kind), ['start', 'repeat', 'jump', 'unknown', 'unknown', 'restart', 'adjacent']);
+  assert.deepEqual(steps.map(s => s.point?.key ?? null), ['a', 'a', '1', null, null, 's', 'd']);
+  assert.deepEqual(steps.map(s => s.previous?.index ?? null), [null, 0, 1, null, null, null, 5]);
+  assert.equal(steps[1].distance, 0);
+  near(steps[2].distance, Math.sqrt(4.25));
+  assert.equal(steps[6].distance, 1);
+  assert.equal(steps[5].distance, null);
+  assert.deepEqual(r, before);
+});
+test('path steps cover empty, unsupported, control and maximum-length input', () => {
+  for (const value of ['', '😀', ' a', '\u202Ea\u0301s', 'a'.repeat(9999) + '😀']) {
+    const steps = C.pathSteps(C.analyze(value));
+    assert.equal(steps.length, Array.from(value).length);
+    assert.equal(steps.map(s => s.char).join(''), value);
+    for (const s of steps) if (!s.point || !s.previous) assert.equal(s.distance, null);
+  }
+  assert.equal(C.pathSteps(C.analyze(' a'))[1].kind, 'restart');
+});
+test('step distances and classifications agree with geometry for every supported key pair', () => {
+  for (const layout of ['jis', 'qwerty', 'dvorak']) {
+    for (const a of C.keys(layout)) for (const b of C.keys(layout)) {
+      const r = C.analyze(a.key + b.key, layout), s = C.pathSteps(r)[1];
+      near(s.distance, r.distance);
+      assert.equal(s.kind, a.key === b.key ? 'repeat' : C.adjacent(a, b) ? 'adjacent' : 'jump');
+      assert.equal(s.previous.index, 0);
+    }
+    const r = C.analyze('Aa!😀sd'.repeat(100), layout);
+    near(C.pathSteps(r).reduce((sum, s) => sum + (s.distance ?? 0), 0), r.distance);
+  }
+});
+
 for (const [layout, word] of [['qwerty', 'asdfgh'], ['jis', 'asdfgh'], ['dvorak', 'aoeuid']]) {
   test(`${layout}: complete horizontal walk`, () => {
     const r = C.analyze(word, layout);

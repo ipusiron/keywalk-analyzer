@@ -584,6 +584,14 @@ footer a:hover{
 }
 
 .learning-section{min-width:0;overflow-wrap:anywhere;line-height:1.6}
+.step-inspector{margin-bottom:1rem}
+.step-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.step-controls button{min-height:44px;min-width:44px;white-space:normal}
+.step-controls button:disabled{cursor:default}
+.step-inspector [role="status"]{min-height:4.8em;font-variant-numeric:tabular-nums}
+@media (min-width:600px){
+  .step-controls{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 .learning-section h2{font-size:1.25rem;margin:0 0 1rem}
 .learning-section h3{font-size:1.125rem;margin:0 0 .75rem}
 .learning-section p{margin:.75rem 0}

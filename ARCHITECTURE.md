@@ -461,6 +461,8 @@ script.jsからの抜粋です。2つの入力欄を共有せず、片方の操�
 function resetSingle() {
   state.single = null;
   state.comparison = null;
+  stepState.steps = [];
+  stepState.index = 0;
   ['m-unique','m-length','m-turns','m-adj','m-dirh','m-cv','m-knight','m-kds'].forEach(id => setText(id, '—'));
   document.getElementById('d-list').replaceChildren();
 }
@@ -470,6 +472,26 @@ function resetProfileMetrics() {
   document.getElementById('traits-list').replaceChildren();
 }
 ```
+
+### 逐次経路表示の状態
+
+`pathSteps(result)`は分析済みモデルから元のコードポイント位置順の配列を作ります。
+各要素は`index`、`char`、`point`、`previous`、`distance`、`kind`を持ちます。
+`previous`は元の入力で直前にあり、両方が対応できた場合の点だけです。
+未対応文字を飛ばして前の対応キーを探すことはありません。
+状態は`start`、`restart`、`unknown`、`repeat`、`adjacent`、`jump`です。
+距離のない位置は`null`、同じキーの距離は0です。
+
+単体分析の実行時に`stepState.steps`を作り、カーソル`stepState.index`を0に戻します。
+前後移動は配列の参照と再描画だけで、分析モデルや全体の計算値を変更しません。
+入力の無効化で配列と位置を消し、detailsを閉じて説明を空にします。
+言語、テーマ、表示モード、プロファイル操作では位置を保持します。
+表示には`visible`と`textContent`を使い、入力文字をHTMLとして解釈しません。
+
+detailsを開いている間は選んだ位置と直前の有効な点だけを描き、現在のキーを枠で示します。
+未対応文字では点も線も描かず、同じキーの繰り返しでは現在の番号だけを描きます。
+操作時は選択したキーが見える位置へ図の内部を横スクロールし、ページや入力欄のフォーカスは移しません。
+閉じると全体図へ戻ります。
 
 ## パフォーマンス最適化
 
@@ -484,6 +506,9 @@ function resetProfileMetrics() {
 ### 3. Canvasの描画量
 
 経路の描画は先頭500対応点、検出表示は種類ごとに先頭20件へ制限し、省略を知らせます。指標は入力上限内の全文で計算します。ヒートマップはキーごとの頻度を描きます。Canvasは全体を再描画します。
+
+逐次表示は最大10,000文字分のモデルをO(n)で一度作ります。
+1回の表示では対応点を最大2点だけ描くため、500対応点を超える位置も確認できます。
 
 ---
 

@@ -49,6 +49,10 @@ The same string can have different adjacency ratios and distances on different l
 
 Inspect adjacent-move counts, the eight-direction distribution, and contributions from the five KDS components.
 
+![Selecting character 3 in Aa!😀 sd to inspect its incoming move](assets/en/screenshot5.png)
+
+Step inspection: on JIS, `!` maps to the `1` key, 2.062 key spacings from the preceding `a`.
+
 ---
 
 ## 👥 Intended users
@@ -140,6 +144,36 @@ Factors and contributions are displayed to three decimal places; calculations us
 The contribution total is displayed as 57.263, and KDS rounded to an integer is 57.
 Finding any listed word, walk, or repeated substring adds the maximum contribution of 15; additional matches do not add more points.
 Multiplying or summing the displayed values may differ from the internal calculation with unrounded values.
+
+#### Inspecting the path one character at a time
+
+After analyzing, open “Inspect the path one character at a time” above the diagram.
+Use First, Previous, Next, and Last to inspect the original position, character, mapped key, and incoming distance.
+Positions count Unicode code points starting at 1, including emoji and unsupported characters.
+
+While open, the diagram shows only the current key and its valid incoming move from the immediately preceding character.
+An outline marks the current key; on narrow screens, the diagram scrolls horizontally to bring it into view.
+Dots-only mode does not draw the move's line.
+Same-key repetitions have distance 0; starting points and unsupported characters show “—”, and no line crosses an unsupported character.
+This maps a string onto a layout; it does not record actual keystrokes.
+
+The following example analyzes `Aa!😀 sd` on JIS.
+The space is displayed as `[U+0020]`.
+
+| Position | Character | Mapped key | Incoming distance | State |
+|---:|---|---|---:|---|
+| 1 | `A` | `a` | — | Start |
+| 2 | `a` | `a` | 0.000 | Same key |
+| 3 | `!` | `1` | 2.062 | Non-adjacent move |
+| 4 | `😀` | — | — | Unsupported |
+| 5 | `[U+0020]` | — | — | Unsupported |
+| 6 | `s` | `s` | — | Start after a break |
+| 7 | `d` | `d` | 1.000 | Adjacent move |
+
+Overall metrics, layout comparison, and calculation details do not change with the selected position.
+Step inspection covers the full input limit of 10,000 characters; closing it restores the overview of the first 500 mapped keys.
+Editing input, changing layout, clearing, or starting IME composition invalidates step inspection; analysis starts again at the first character.
+Language, theme, display-mode, and tab changes preserve the position.
 
 ### 2. Pattern profile
 
@@ -286,12 +320,14 @@ keywalk-analyzer/                      # Project root
 │   │   ├── screenshot.png             # English single analysis, light
 │   │   ├── screenshot2.png            # English profile, light
 │   │   ├── screenshot3.png            # English layout comparison, dark
-│   │   └── screenshot4.png            # English calculation details, light
+│   │   ├── screenshot4.png            # English calculation details, light
+│   │   └── screenshot5.png            # English step inspection, light
 │   ├── favicon.svg                    # Site icon
 │   ├── screenshot.png                 # Japanese single analysis, light
 │   ├── screenshot2.png                # Japanese profile, light
 │   ├── screenshot3.png                # Japanese layout comparison, dark
-│   └── screenshot4.png                # Japanese calculation details, light
+│   ├── screenshot4.png                # Japanese calculation details, light
+│   └── screenshot5.png                # Japanese step inspection, light
 ├── test/                              # Dependency-free regression tests
 │   ├── core.test.js                   # Layouts, metrics, boundaries
 │   ├── format.test.js                 # Formatting and non-minification

@@ -2,6 +2,15 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const messages = require('../keywalk-messages.js');
 const ui = require('../keywalk-ui-messages.js');
+test('step navigation, positions and every classification are translated', () => {
+  const keys = ['stepTitle', 'stepNote', 'stepPosition', ...['first', 'prev', 'next', 'last'].map(k => 'step_' + k),
+    ...['start', 'restart', 'unknown', 'repeat', 'adjacent', 'jump'].map(k => 'step_kind_' + k)];
+  for (const key of keys) {
+    assert.ok(messages.ja[key], key);
+    assert.ok(messages.en[key], key);
+    assert.doesNotMatch(messages.en[key], /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u);
+  }
+});
 test('every comparison, direction and KDS formula has Japanese and English text', () => {
   const keys = ['comparisonTitle', 'comparisonNote', 'calculationTitle', 'calculationFor', 'adjacencyMath', 'movementMath',
     'turnMath', 'cvMath', 'noPairs', 'noCV', 'noDirection', 'entropyMath', 'kdsPartsNote', 'kdsInputs', 'partValue', 'kdsTotal'];

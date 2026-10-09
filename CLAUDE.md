@@ -62,6 +62,15 @@ Single input/layout changes and clear invalidate both; profile changes do not af
 `renderComparison` and `renderCalculation` only render retained values, using textContent.
 The native details panel is collapsed on invalidation; hidden content is cleared to avoid stale language or data.
 
+`pathSteps(result)` derives one step per original code point, including unsupported characters, without changing metrics.
+`stepState` retains the steps and a bounded index; navigation never reanalyzes input.
+Unknowns have no point; starts/restarts have no incoming distance; repeats have distance 0.
+The native step-inspector details shows only the selected incoming pair, with an outline on the current key.
+Unknowns draw nothing; repeats draw one numbered point. Dots mode suppresses the line.
+Navigation scrolls the diagram horizontally to the current key, without moving page focus.
+All 10,000 input positions are available; closing the inspector restores the first-500-key overview.
+Input/layout/clear/composition invalidation clears steps and closes the inspector; theme/language/tab/display changes preserve the cursor.
+
 `geometry` exposes `adjacentCount`, `knightCount` and `turnPairs` alongside ratios and eight direction counts.
 `analyze` exposes `kdsRaw` and five `kdsBreakdown` entries (id, maximum, factor, contribution).
 Unavailable KDS keeps all factors and contributions null, not zero. Round only the final score.

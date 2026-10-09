@@ -14,7 +14,8 @@ const headingPairs = [
   ['🖥️ 入力デバイスとキーボードレイアウトによる変化', '🖥️ Input devices and keyboard layouts'],
   ['対応する簡略配列', 'Supported simplified layouts'], ['対象外の入力方式', 'Input methods outside the model'],
   ['🔧 本ツールの機能', '🔧 Features'], ['1. 単体分析モード', '1. Single analysis'],
-  ['配列比較と計算根拠', 'Layout comparison and calculation details'], ['2. 癖プロファイルモード', '2. Pattern profile'],
+  ['配列比較と計算根拠', 'Layout comparison and calculation details'],
+  ['経路を1文字ずつ確認', 'Inspecting the path one character at a time'], ['2. 癖プロファイルモード', '2. Pattern profile'],
   ['📖 使用方法', '📖 Usage'], ['単体分析タブ', 'Single analysis tab'], ['癖プロファイルタブ', 'Pattern profile tab'],
   ['言語・テーマとローカル実行', 'Language, theme, and local use'], ['💡 サンプル入力例', '💡 Sample inputs'],
   ['単体分析', 'Single analysis'], ['癖プロファイル', 'Pattern profile'], ['🎯 ユースケース', '🎯 Use cases'],
@@ -28,7 +29,7 @@ const headingPairs = [
 test('full README translation preserves heading order and hierarchy', () => {
   const heads = text => [...text.matchAll(/^(#{1,6}) (.+)$/gm)].map(m => [m[1], m[2]]);
   const j = heads(ja), e = heads(en);
-  assert.equal(j.length, 36);
+  assert.equal(j.length, 37);
   assert.deepEqual(j.map(h => h[1]), headingPairs.map(h => h[0]));
   assert.deepEqual(e.map(h => h[1]), headingPairs.map(h => h[1]));
   assert.deepEqual(j.map(h => h[0]), e.map(h => h[0]));
@@ -48,6 +49,13 @@ test('README metadata keeps identity and block-list structure', () => {
   assert.doesNotMatch(en, /^<!--\s*---/);
 });
 for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
+  test(file + ': all seven step-inspection rows match original characters, mapping and distances', () => {
+    const rows = [...text.matchAll(/^\| ([1-7]) \| (`[^`]+`|—) \| (`[^`]+`|—) \| ([\d.]+|—) \| .+ \|$/gm)];
+    const steps = core.pathSteps(core.analyze('Aa!😀 sd', 'jis'));
+    assert.equal(rows.length, 7);
+    assert.deepEqual(rows.map(m => m.slice(1)), steps.map(s => [String(s.index + 1), '`' + core.visible(s.char) + '`',
+      s.point ? '`' + s.point.key + '`' : '—', s.distance === null ? '—' : s.distance.toFixed(3)]));
+  });
   test(file + ': all five KDS contributions and their total match the model', () => {
     const rows = [...text.matchAll(/^\| (adjacency|direction|turns|pattern|variation) \| (\d+) \| ([\d.]+) \| ([\d.]+) \|$/gm)];
     assert.equal(rows.length, 5);
@@ -94,7 +102,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
   });
   test(file + ': images and relative links exist; screenshots are bounded PNGs', () => {
     const images = [...text.matchAll(/!\[[^\]]*\]\((assets\/[^)]+)\)/g)];
-    assert.equal(images.length, 4);
+    assert.equal(images.length, 5);
     for (const [, name] of images) {
       const data = fs.readFileSync(path.join(root, name));
       assert.equal(data.subarray(1, 4).toString(), 'PNG');
@@ -109,7 +117,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
   test(file + ': directory tree uses real paths, aligned comments and visible hierarchy', () => {
     const block = text.match(/```text\r?\n(keywalk-analyzer\/[\s\S]*?)\r?\n```/)[1];
     const lines = block.split(/\r?\n/), stack = [], found = [];
-    assert.equal(lines.length, 39);
+    assert.equal(lines.length, 41);
     assert.equal(new Set(lines.map(line => line.indexOf('#'))).size, 1);
     for (const line of lines.slice(1)) {
       const m = line.match(/^([│ ]*)(?:├── |└── )([^#]+?)\s+# .+$/);
@@ -121,7 +129,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
       if (name.endsWith('/')) stack.push(name.slice(0, -1));
       else found.push(relative);
     }
-    assert.equal(found.length, 33);
+    assert.equal(found.length, 35);
     const actual = [];
     // Ignored personal directories are not distributed project files.
     const ignoredDirs = new Set(read('.gitignore').split(/\r?\n/)

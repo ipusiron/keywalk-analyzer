@@ -3,6 +3,36 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const read = name => fs.readFileSync(path.join(__dirname,'..',name),'utf8');
+test('step inspector uses native disclosure, live text and four bounded touch controls', () => {
+  const html = read('index.html'), css = read('style.css');
+  assert.match(html, /<details[^>]*id="path-inspector"[^>]*hidden/);
+  assert.match(html, /id="step-status" role="status" aria-live="polite" aria-atomic="true"/);
+  for (const name of ['first', 'prev', 'next', 'last']) {
+    assert.match(html, new RegExp('<button type="button"[^>]*id="step-' + name + '"'));
+  }
+  assert.match(css, /\.step-controls\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css, /\.step-controls button\{min-height:44px;min-width:44px/);
+});
+test('step drawing never bridges unknowns and only plots the selected pair or current repeat', () => {
+  const vm = require('node:vm'), C = require('../keywalk-core.js');
+  const source = read('script.js').match(/function drawStep\(\) \{[\s\S]*?\n\}/)[0];
+  const steps = C.pathSteps(C.analyze('Aa!😀 sd'));
+  for (const [index, positions] of [[0, [0]], [1, [1]], [2, [1, 2]], [3, []], [4, []], [5, [5]], [6, [5, 6]]]) {
+    for (const mode of ['path', 'dots']) {
+      let plotted = [], rect = null, actualMode;
+      vm.runInNewContext(source + '\ndrawStep();', {
+        stepState: {steps, index}, document: {documentElement: {dataset: {theme: 'light'}}, getElementById: () => ({value: mode})},
+        plotPath: (points, display) => { plotted = points; actualMode = display; },
+        ctx: {save() {}, restore() {}, strokeRect(...args) { rect = args; }}
+      });
+      assert.deepEqual(Array.from(plotted, p => p.index), positions);
+      if (!positions.length) { assert.equal(rect, null); continue; }
+      const point = steps[index].point;
+      assert.deepEqual(rect, [8 + 78*point.x, 38 + 78*point.y, 70, 64]);
+      assert.equal(actualMode, mode);
+    }
+  }
+});
 test('learning sections are hidden initially and use native keyboard-operable details', () => {
   const html = read('index.html'), css = read('style.css');
   assert.match(html, /<section[^>]*id="layout-comparison"[^>]*hidden/);
