@@ -3,6 +3,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const read = name => fs.readFileSync(path.join(__dirname,'..',name),'utf8');
+test('learning sections are hidden initially and use native keyboard-operable details', () => {
+  const html = read('index.html'), css = read('style.css');
+  assert.match(html, /<section[^>]*id="layout-comparison"[^>]*hidden/);
+  assert.match(html, /<details[^>]*id="calculation-details"[^>]*hidden/);
+  assert.match(html, /<summary id="calculation-summary"><\/summary>/);
+  assert.match(css, /\.comparison-grid\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(css, /\.learning-section summary:focus-visible/);
+  const definitions = new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map(m => m[1]));
+  const learning = css.slice(css.indexOf('.learning-section{'));
+  for (const [, name] of learning.matchAll(/var\((--[\w-]+)\)/g)) assert.ok(definitions.has(name), name);
+});
 test('canvas keeps aspect ratio and scrolls inside its own region', () => {
   const css = read('style.css');
   assert.match(css, /aspect-ratio:1100\/420/);

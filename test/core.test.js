@@ -154,3 +154,26 @@ test('unavailable KDS does not expose fabricated zero contributions', () => {
     }
   }
 });
+test('direction counts, ratios and contributions agree for all supported key pairs', () => {
+  for (const layout of ['jis', 'qwerty', 'dvorak']) {
+    for (const a of C.keys(layout)) for (const b of C.keys(layout)) {
+      const r = C.analyze(a.key + b.key, layout);
+      assert.equal(r.bins.reduce((sum, n) => sum + n, 0), r.moving);
+      assert.equal(r.adjacentCount / r.transitions, r.adjacent);
+      assert.equal(r.knightCount / r.transitions, r.knight);
+      assert.equal(r.transitions, r.moving + r.repeats);
+      assert.ok(r.kdsBreakdown.every(p => p.factor === null));
+    }
+  }
+});
+test('unsupported coverage is layout-specific; comparison never trims or substitutes input', () => {
+  const rows = C.compareLayouts('asdf\\');
+  assert.deepEqual(rows.map(r => r.unknown.length), [0, 0, 1]);
+  assert.deepEqual(rows.map(r => r.characters), [5, 5, 5]);
+  assert.equal(rows[2].kdsReason, 'incomplete');
+  for (const r of C.compareLayouts(' asdf ')) {
+    assert.equal(r.unknown.length, 2);
+    assert.equal(r.characters, 6);
+    assert.equal(r.kds, null);
+  }
+});
