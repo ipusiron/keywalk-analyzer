@@ -1,6 +1,6 @@
 /* KeyWalk Analyzer: DOM rendering over the independent KeyWalkCore model. */
 const Core = KeyWalkCore;
-const state = {single: null, profile: null, singleNotice: '', profileNotice: ''};
+const state = {single: null, comparison: null, profile: null, singleNotice: '', profileNotice: ''};
 const composing = {single: false, profile: false};
 function t(key, args = {}) {
   const language = document.documentElement.lang === 'en' ? 'en' : 'ja';
@@ -167,6 +167,7 @@ function addLi(ul, text) {
 }
 function resetSingle() {
   state.single = null;
+  state.comparison = null;
   ['m-unique','m-length','m-turns','m-adj','m-dirh','m-cv','m-knight','m-kds'].forEach(id => setText(id, '—'));
   document.getElementById('d-list').replaceChildren();
 }
@@ -182,7 +183,10 @@ function analyzeSingle() {
   try {
     const raw = document.getElementById('pwd').value;
     if (!raw) state.singleNotice = 'empty';
-    else state.single = Core.analyze(raw, document.getElementById('layout').value);
+    else {
+      state.comparison = Core.compareLayouts(raw);
+      state.single = state.comparison.find(r => r.layout === document.getElementById('layout').value);
+    }
   } catch (error) {
     state.singleNotice = Object.hasOwn(KeyWalkMessages.ja, error.message) ? error.message : 'error';
   }
@@ -277,7 +281,45 @@ function drawResults() {
     pctx.globalAlpha = 1;
   }
 }
-function renderAll() { renderSingle(); renderProfile(); drawResults(); }
+function textElement(tag, text) {
+  const element = document.createElement(tag);
+  element.textContent = text;
+  return element;
+}
+function renderComparison() {
+  const section = document.getElementById('layout-comparison');
+  section.replaceChildren();
+  section.hidden = !state.comparison;
+  if (!state.comparison) return;
+  const heading = textElement('h2', t('comparisonTitle'));
+  heading.id = 'comparison-title';
+  section.append(heading, textElement('p', t('comparisonNote')));
+  const grid = document.createElement('div');
+  grid.className = 'comparison-grid';
+  for (const r of state.comparison) {
+    const card = document.createElement('article');
+    card.className = 'comparison-layout';
+    card.dataset.layout = r.layout;
+    card.append(textElement('h3', t('layout_' + r.layout)));
+    const selected = r.layout === state.single.layout;
+    card.append(textElement('p', t(selected ? 'selectedLayout' : 'comparisonLayout')));
+    const list = document.createElement('dl');
+    for (const [label, value] of [
+      ['adjacencyLabel', percent(r.adjacent)], ['distanceLabel', number(r.distance, 2)],
+      ['entropyLabel', number(r.entropy, 2)], ['cvLabel', number(r.cv, 2)], ['kdsLabel', number(r.kds)],
+      ['mappedLabel', r.points.length + ' / ' + r.characters], ['unknownLabel', r.unknown.length]
+    ]) {
+      const row = document.createElement('div');
+      row.append(textElement('dt', t(label)), textElement('dd', value));
+      list.append(row);
+    }
+    card.append(list);
+    if (r.kds === null) card.append(textElement('p', t(r.kdsReason)));
+    grid.append(card);
+  }
+  section.append(grid);
+}
+function renderAll() { renderSingle(); renderProfile(); renderComparison(); drawResults(); }
 function invalidate(tab) {
   if (tab === 'single') resetSingle(); else resetProfileMetrics();
   state[tab + 'Notice'] = 'dirty';

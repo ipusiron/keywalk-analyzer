@@ -4,6 +4,12 @@
   else root.KeyWalkMessages = messages;
 })(globalThis, function() {
   return {ja: {
+    comparisonTitle: '同じ文字列を3配列で比較',
+    comparisonNote: 'JIS・QWERTY・Dvorakの固定順です。優劣や安全性の順位ではありません。未対応文字で経路を区切り、距離はキー間隔で表します。',
+    layout_jis: 'JIS（簡易）', layout_qwerty: 'QWERTY（US）', layout_dvorak: 'Dvorak',
+    selectedLayout: '図と計算内訳の対象', comparisonLayout: '比較用の配列',
+    adjacencyLabel: '隣接キー比率', distanceLabel: '総移動距離', entropyLabel: '方向エントロピー H',
+    cvLabel: 'ステップCV', kdsLabel: 'KDS（参考値）', mappedLabel: '対応文字 / 全文字', unknownLabel: '未対応文字',
     empty: '入力がありません。学習用サンプルを選んでください。',
     dirty: '入力または配列が変わりました。もう一度分析してください。',
     insufficient: '算出対象外（4キー以上かつ移動3回以上が必要）',
@@ -34,6 +40,13 @@
     error: '分析できませんでした。入力と配列を確認してください。',
     help: '説明を開く', toggleLanguage: '言語を切り替える'
   }, en: {
+    comparisonTitle: 'Compare the same string across three layouts',
+    comparisonNote: 'Fixed order: JIS, QWERTY, Dvorak; not a ranking of quality or security. '
+      + 'Unsupported characters break paths. Distances are in key-spacing units.',
+    layout_jis: 'JIS (simplified)', layout_qwerty: 'QWERTY (US)', layout_dvorak: 'Dvorak',
+    selectedLayout: 'Shown in the diagram and calculation details', comparisonLayout: 'Comparison layout',
+    adjacencyLabel: 'Adjacent-key ratio', distanceLabel: 'Total distance', entropyLabel: 'Direction entropy H',
+    cvLabel: 'Step CV', kdsLabel: 'KDS (reference)', mappedLabel: 'Mapped / all characters', unknownLabel: 'Unsupported characters',
     empty: 'No input. Choose a learning sample.',
     dirty: 'The input or layout changed. Analyze again.',
     insufficient: 'Unavailable (requires at least four keys and three nonzero moves)',
