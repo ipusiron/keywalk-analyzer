@@ -98,7 +98,8 @@ function plotPath(points,mode){
   const startColor = isLight ? '#00aa33' : '#39ff14';
   const pointColor = isLight ? '#cc0099' : '#ff00e5';
   const coreColor = isLight ? '#ffffff' : '#ffffff';
-  const numBg = isLight ? '#f0f4ff' : '#0a0e27';
+  // The point core is white in both themes, so its index needs dark ink.
+  const numBg = '#0a0e27';
 
   ctx.lineWidth = 5; ctx.lineJoin='round'; ctx.lineCap='round';
   if(mode==='path'){
