@@ -107,3 +107,50 @@ test('profile bounds and invalid API input', () => {
 test('control characters are visible and cannot reorder output', () => {
   assert.equal(C.visible('a\u202Eb\n'), 'a[U+202E]b[U+000A]');
 });
+
+test('layout comparison has a fixed order and equals independent single analyses', () => {
+  for (const input of ['aoeuid', 'a@_\\', 'ASD 😀fgh', '', 'aaaa', 'a'.repeat(10000)]) {
+    const results = C.compareLayouts(input);
+    assert.deepEqual(results.map(r => r.layout), ['jis', 'qwerty', 'dvorak']);
+    results.forEach(r => assert.deepEqual(r, C.analyze(input, r.layout)));
+  }
+  assert.deepEqual(C.compareLayouts('aoeuid').map(r => r.adjacent), [0.2, 0.2, 1]);
+  assert.throws(() => C.compareLayouts('a'.repeat(10001)), /singleLimit/);
+  assert.throws(() => C.compareLayouts(null), TypeError);
+});
+test('geometry exposes exact denominators and counts, including repeats and segment breaks', () => {
+  const r = C.analyze('aas dsa', 'jis');
+  assert.equal(r.transitions, 4);
+  assert.equal(r.adjacentCount, 3);
+  assert.equal(r.repeats, 1);
+  assert.equal(r.moving, 3);
+  assert.equal(r.turnPairs, 1);
+  assert.deepEqual(r.bins, [1, 0, 0, 0, 2, 0, 0, 0]);
+  assert.equal(r.knightCount, 0);
+});
+test('KDS contributions expose five weights and preserve the unrounded total', () => {
+  const r = C.analyze('aoeuid', 'dvorak');
+  assert.deepEqual(r.kdsBreakdown.map(p => p.id), ['adjacency', 'direction', 'turns', 'pattern', 'variation']);
+  assert.deepEqual(r.kdsBreakdown.map(p => p.maximum), [30, 25, 20, 15, 10]);
+  assert.deepEqual(r.kdsBreakdown.map(p => p.factor), [1, 1, 1, 1, 1]);
+  assert.deepEqual(r.kdsBreakdown.map(p => p.contribution), [30, 25, 20, 15, 10]);
+  assert.equal(r.kdsRaw, 100);
+  assert.equal(r.kds, 100);
+  for (const input of ['qwerty123!', 'aoeuid', 'asdfgh', 'asasasas', 'xK9#mQ2$vL']) {
+    for (const r of C.compareLayouts(input)) {
+      near(r.kdsRaw, r.kdsBreakdown.reduce((sum, p) => sum + p.contribution, 0));
+      assert.equal(r.kds, Math.round(r.kdsRaw));
+      for (const p of r.kdsBreakdown) assert.ok(p.factor >= 0 && p.factor <= 1);
+    }
+  }
+});
+test('unavailable KDS does not expose fabricated zero contributions', () => {
+  for (const input of ['', 'aaa', 'aaaa', 'asd fgh', '😀']) {
+    const r = C.analyze(input);
+    assert.equal(r.kdsRaw, null);
+    for (const part of r.kdsBreakdown) {
+      assert.equal(part.factor, null);
+      assert.equal(part.contribution, null);
+    }
+  }
+});
