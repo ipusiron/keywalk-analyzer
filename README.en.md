@@ -231,6 +231,7 @@ Open `http://127.0.0.1:8000/`.
 #### Typical examples and random generation
 
 The sample selector groups 13 examples into walks and return paths, digits and repetition, words and mixed characters, and path breaks.
+Learning samples starts expanded. Click or tap its heading, or focus it and press Enter or Space, to expand or collapse it. Collapsing preserves the input, selections, and analysis results.
 Selecting an example previews its text without changing the input.
 Load and analyze replaces the single input, analyzes it, and returns step inspection to the first character.
 It does not change the Pattern profile input or results.
