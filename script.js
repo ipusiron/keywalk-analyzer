@@ -29,7 +29,6 @@ const pctx = pcanvas.getContext('2d');                       // プロファイ�
  * @returns {CanvasRenderingContext2D} スケール調整済みのコンテキスト
  */
 function setupCanvas(cvs){
-  const rect = cvs.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   cvs.width = 1100 * dpr;
   cvs.height = 420 * dpr;
@@ -65,7 +64,7 @@ function drawKeyboards(){
 
   for(const t of targets){
     t.c.clearRect(0,0,t.w,t.h);
-    t.c.font = 'bold 13px "Orbitron", monospace';
+    t.c.font = 'bold 18px monospace';
     for(const [k,p] of buildCoordMap(t.layout).entries()){
       // キー背景（ネオングロー）- 正方形
       t.c.shadowBlur = 10;
@@ -147,7 +146,7 @@ function plotPath(points,mode){
     // 番号
     ctx.shadowBlur = 0;
     ctx.fillStyle=numBg;
-    ctx.font = 'bold 11px "Orbitron", monospace';
+    ctx.font = 'bold 16px monospace';
     const text = String(p.index + 1);
     const metrics = ctx.measureText(text);
     ctx.fillText(text, p.x+27-metrics.width/2, p.y+4);

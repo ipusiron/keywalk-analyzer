@@ -20,6 +20,7 @@
     <header>
       <div class="header-top">
         <h1>KeyWalk Analyzer</h1>
+        <div class="header-actions">
         <button id="theme-toggle" class="theme-btn" aria-label="テーマ切り替え">
           <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
@@ -31,6 +32,7 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
         </button>
+        </div>
       </div>
       <div class="meta">
         パスワードをキーボード座標上に可視化し、歩きや直線・反復などのパターンを検出。複数パスワードから癖プロファイルも抽出します。<br>
@@ -88,7 +90,10 @@
       </div>
 
       <div class="card">
-        <canvas id="keyboard-canvas" width="1100" height="420" aria-label="keyboard plot"></canvas>
+        <div class="keyboard-scroll" tabindex="0" role="region" aria-label="キーボード図。左右にスクロールできます">
+          <canvas id="keyboard-canvas" width="1100" height="420" aria-label="単体分析の経路図"></canvas>
+        </div>
+        <p class="hint">狭い画面では図の中を左右にスクロールできます。数値と検出結果も併せて確認してください。</p>
       </div>
 
       <div class="card results-section">
@@ -121,7 +126,7 @@
           </div>
           <div class="metric">
             <div class="label">
-              総移動距離(px)
+              総移動距離（キー間隔）
               <span class="help-icon" data-tooltip="キーボード上での指の移動距離の合計。距離が長いほど、キーが分散している傾向があります。">?</span>
             </div>
             <div id="m-length" class="value">-</div>
@@ -236,7 +241,10 @@ Hello123!"></textarea>
       </div>
 
       <div class="card">
-        <canvas id="profile-canvas" width="1100" height="420" aria-label="profile heatmap"></canvas>
+        <div class="keyboard-scroll" tabindex="0" role="region" aria-label="使用頻度の図。左右にスクロールできます">
+          <canvas id="profile-canvas" width="1100" height="420" aria-label="キー使用頻度の図"></canvas>
+        </div>
+        <p class="hint">色の濃さは、この入力内の最多使用キーに対する比率です。件数は結果一覧で確認できます。</p>
       </div>
 
       <div class="card results-section">
@@ -259,7 +267,7 @@ Hello123!"></textarea>
           </div>
           <div class="metric">
             <div class="label">
-              平均移動距離(px)
+              平均移動距離（キー間隔）
               <span class="help-icon" data-tooltip="複数パスワードでのキーボード上の移動距離の平均。キーの分散度を示します。">?</span>
             </div>
             <div id="pm-length" class="value">-</div>
