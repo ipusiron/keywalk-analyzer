@@ -30,7 +30,7 @@
 ### データフロー
 
 ```text
-入力欄 → analyze / profile（keywalk-core.js）→ タブ別state
+入力欄 → compareLayouts / profile（keywalk-core.js）→ タブ別state
                   ↓
          配列への対応付け・区間分割
                   ↓
@@ -40,6 +40,11 @@
 ```
 
 計算部は通常のブラウザースクリプトとCommonJSの両方で使えます。file://での実行を保つため、ES moduleやビルド工程は使いません。
+
+単体分析はcompareLayoutsから3配列のanalyzeを呼び、同じ入力をそれぞれの配列へ対応付けます。
+state.comparisonに固定順（JIS、QWERTY、Dvorak）の結果を保持し、state.singleは選択中の配列の結果を参照します。
+比較表は順位を付けず、対応文字数と未対応文字数も示します。
+renderComparisonとrenderCalculationは保持した値を表示するだけで、言語変更時の再計算を行いません。
 
 ---
 
@@ -171,6 +176,16 @@ KDS = round(100 * (0.30*A + 0.25*E + 0.20*S + 0.15*P + 0.10*C))
 
 重みと閾値は本ツールの仕様であり、データによる較正は行っていません。表示言語やDOMの説明文は計算に使いません。入力不足や未対応文字を0点に置き換えず、nullと理由を返します。
 
+kdsBreakdownは5項目のID、最大寄与、係数、寄与を返します。
+kdsRawは整数へ丸める前の合計で、kdsはその整数丸めです。
+算出対象外ではkdsRaw、各係数、各寄与をnullにします。
+計算内訳の表示は小数点以下3桁なので、表示された係数から再計算した値と内部の値は一致しない場合があります。
+画面のAは生の隣接率を指し、この節の式のA（上限を適用した係数）とは区別します。
+
+geometryのadjacentCount、knightCount、turnPairsはそれぞれ隣接移動、ナイトムーブ、方向転換を比較できた組の整数カウントです。
+binsは右、右上、上、左上、左、左下、下、右下の順で、合計はmovingに一致します。
+方向の割合の分母はmovingであり、同じキーを含むtransitionsではありません。
+
 ---
 
 KDSと検出結果の組み立て
@@ -190,16 +205,22 @@ function analyze(text, layout = 'jis') {
   const straight = eligible && metrics.turns !== null && metrics.turns <= 1;
   const lowH = eligible && metrics.entropy < 1.5, lowCV = eligible && metrics.cv < 0.25;
   const pattern = known.length > 0 || foundWalks.length > 0 || repeated.length > 0;
-  const kds = eligible ? Math.round(100 * (
-    0.30 * Math.min(1, metrics.adjacent / 0.7) +
-    0.25 * Math.max(0, (1.5 - metrics.entropy) / 1.5) +
-    0.20 * Number(straight) + 0.15 * Number(pattern) +
-    0.10 * Math.max(0, (0.25 - metrics.cv) / 0.25)
-  )) : null;
+  const kdsBreakdown = [
+    ['adjacency', 0.30, Math.min(1, metrics.adjacent / 0.7)],
+    ['direction', 0.25, Math.max(0, (1.5 - metrics.entropy) / 1.5)],
+    ['turns', 0.20, Number(straight)], ['pattern', 0.15, Number(pattern)],
+    ['variation', 0.10, Math.max(0, (0.25 - metrics.cv) / 0.25)]
+  ].map(([id, weight, factor]) => ({
+    id, maximum: weight * 100, factor: eligible ? factor : null,
+    contribution: eligible ? 100 * weight * factor : null
+  }));
+  // Preserve the order and precision of the reference formula; round only the final score.
+  const kdsRaw = eligible ? 100 * kdsBreakdown.reduce((sum, part) => sum + part.maximum / 100 * part.factor, 0) : null;
+  const kds = kdsRaw === null ? null : Math.round(kdsRaw);
   return {
     layout, characters: Array.from(text).length, ...mapped, ...metrics,
     unique: new Set(mapped.points.map(p => p.key)).size,
-    known, walks: foundWalks, repeated, straight, lowH, lowCV, kds,
+    known, walks: foundWalks, repeated, straight, lowH, lowCV, kds, kdsRaw, kdsBreakdown,
     kdsReason: mapped.unknown.length ? 'incomplete' : 'insufficient'
   };
 }
@@ -302,6 +323,7 @@ function geometry(segments) {
     ? Math.sqrt(steps.reduce((sum, n) => sum + (n - mean) ** 2, 0) / transitions) / mean : null;
   return {
     distance, turns: turnPairs ? turns : null, transitions, moving, repeats, bins, entropy, cv,
+    adjacentCount, knightCount, turnPairs,
     adjacent: transitions ? adjacentCount / transitions : null,
     knight: transitions ? knightCount / transitions : null
   };
@@ -438,6 +460,7 @@ script.jsからの抜粋です。2つの入力欄を共有せず、片方の操�
 ```javascript
 function resetSingle() {
   state.single = null;
+  state.comparison = null;
   ['m-unique','m-length','m-turns','m-adj','m-dirh','m-cv','m-knight','m-kds'].forEach(id => setText(id, '—'));
   document.getElementById('d-list').replaceChildren();
 }
@@ -469,7 +492,7 @@ function resetProfileMetrics() {
 ### 新しいキーボードレイアウトの追加
 
 1. `keywalk-core.js`に行・オフセット・Shift対応を追加
-2. 両タブの配列選択、日英辞書、サンプルに追加
+2. 両タブの配列選択、compareLayoutsの固定順、日英辞書、サンプルに追加
 3. 座標・記号・境界・未対応文字のテストとREADMEの例を追加
 4. 単体とプロファイルの独立性をブラウザーで確認
 

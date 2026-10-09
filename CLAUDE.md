@@ -56,6 +56,17 @@ keywalk-analyzer/
 
 `state.single` and `state.profile` are independent. Input/layout changes invalidate the affected result. Language/theme/display changes redraw retained models without recalculation.
 
+`compareLayouts(text)` returns independent single analyses in fixed JIS/QWERTY/Dvorak order, not a ranking.
+`state.comparison` retains these models; `state.single` points to the selected layout's model.
+Single input/layout changes and clear invalidate both; profile changes do not affect them.
+`renderComparison` and `renderCalculation` only render retained values, using textContent.
+The native details panel is collapsed on invalidation; hidden content is cleared to avoid stale language or data.
+
+`geometry` exposes `adjacentCount`, `knightCount` and `turnPairs` alongside ratios and eight direction counts.
+`analyze` exposes `kdsRaw` and five `kdsBreakdown` entries (id, maximum, factor, contribution).
+Unavailable KDS keeps all factors and contributions null, not zero. Round only the final score.
+Displayed three-decimal factors/contributions are explanatory approximations, not new calculation inputs.
+
 ### 3. Key Detection Algorithms
 
 - Adjacency: different keys with absolute dx and dy at most 1
