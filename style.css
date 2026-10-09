@@ -593,6 +593,15 @@ footer a:hover{
 .comparison-layout dl > div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.25rem 1rem;margin:.5rem 0}
 .comparison-layout dt{flex:1 1 8rem}
 .comparison-layout dd{margin:0;font-variant-numeric:tabular-nums}
+.learning-section summary{cursor:pointer;min-height:44px;padding:.75rem;font-weight:600;font-size:1.125rem}
+.learning-section summary:focus-visible{outline:3px solid var(--neon-cyan);outline-offset:-3px}
+.learning-section ul,.learning-section ol{padding-left:1.5rem}
+.learning-section li{margin:.75rem 0}
+.learning-section h4{font-size:1rem;margin:.5rem 0}
+.direction-counts{display:grid;grid-template-columns:minmax(0,1fr);gap:.25rem 1rem}
+@media (min-width:600px){
+  .direction-counts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media (min-width:900px){
   .comparison-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }

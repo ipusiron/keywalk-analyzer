@@ -319,7 +319,56 @@ function renderComparison() {
   }
   section.append(grid);
 }
-function renderAll() { renderSingle(); renderProfile(); renderComparison(); drawResults(); }
+function renderCalculation() {
+  const details = document.getElementById('calculation-details');
+  const body = document.getElementById('calculation-body');
+  const r = state.single;
+  details.hidden = !r;
+  body.replaceChildren();
+  setText('calculation-summary', t('calculationTitle'));
+  if (!r) { details.open = false; return; }
+  body.append(textElement('h2', t('calculationFor', {layout:t('layout_' + r.layout)})));
+  const counts = document.createElement('ul');
+  counts.id = 'calculation-counts';
+  addLi(counts, t('adjacencyMath', {count:r.adjacentCount, total:r.transitions, value:percent(r.adjacent)}));
+  addLi(counts, t('movementMath', {total:r.transitions, repeats:r.repeats, moving:r.moving, distance:number(r.distance, 3)}));
+  addLi(counts, t('turnMath', {turns:number(r.turns), pairs:r.turnPairs}));
+  addLi(counts, t('cvMath', {value:number(r.cv, 3)}));
+  if (!r.transitions) addLi(counts, t('noPairs'));
+  if (r.cv === null) addLi(counts, t('noCV'));
+  body.append(counts, textElement('h3', t('directionsTitle')), textElement('p', t('directionsNote')));
+  const directions = document.createElement('ul');
+  directions.id = 'direction-counts';
+  directions.className = 'direction-counts';
+  r.bins.forEach((count, index) => addLi(directions, t('directionCount', {
+    direction:t('direction_' + index), count, total:r.moving,
+    share:r.moving ? (100 * count / r.moving).toFixed(1) + '%' : '—'
+  })));
+  body.append(directions, textElement('p', t('entropyMath', {value:number(r.entropy, 3)})));
+  if (!r.moving) body.append(textElement('p', t('noDirection')));
+  body.append(textElement('h3', t('kdsPartsTitle')), textElement('p', t('kdsPartsNote')));
+  body.append(textElement('p', t('kdsInputs', {
+    adjacent:number(r.adjacent, 3), entropy:number(r.entropy, 3), turns:number(r.turns), cv:number(r.cv, 3),
+    known:r.known.length, walks:r.walks.length, repeated:r.repeated.length
+  })));
+  if (r.kds === null) body.append(textElement('p', t(r.kdsReason)));
+  const parts = document.createElement('ol');
+  parts.id = 'kds-parts';
+  for (const part of r.kdsBreakdown) {
+    const li = document.createElement('li');
+    li.append(textElement('h4', t('part_' + part.id)), textElement('p', t('formula_' + part.id)),
+      textElement('p', t('partValue', {maximum:part.maximum, factor:number(part.factor, 3), value:number(part.contribution, 3)})));
+    parts.append(li);
+  }
+  body.append(parts);
+  if (r.kds !== null) {
+    const total = textElement('p', t('kdsTotal', {raw:number(r.kdsRaw, 3), value:r.kds}));
+    total.id = 'kds-total';
+    body.append(total);
+  }
+  body.append(textElement('p', t('reference')));
+}
+function renderAll() { renderSingle(); renderProfile(); renderComparison(); renderCalculation(); drawResults(); }
 function invalidate(tab) {
   if (tab === 'single') resetSingle(); else resetProfileMetrics();
   state[tab + 'Notice'] = 'dirty';
