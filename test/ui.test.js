@@ -3,6 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const read = name => fs.readFileSync(path.join(__dirname,'..',name),'utf8');
+test('learning samples use a native accordion that starts open and contains both sample controls', () => {
+  const html = read('index.html');
+  const panel = html.match(/<details class="sample-panel learning-section" id="learning-samples" open>([\s\S]*?)<\/details>/);
+  assert.ok(panel);
+  assert.match(panel[1], /^\s*<summary id="sample-heading"><\/summary>/);
+  for (const id of ['sample-select', 'load-sample', 'random-kind', 'random-length', 'generate-sample', 'sample-feedback']) {
+    assert.ok(panel[1].includes('id="' + id + '"'));
+  }
+  assert.doesNotMatch(panel[1], /id="(?:analyze|clear)"/);
+});
 test('samples use labelled selects and separate explicit load and generate buttons', () => {
   const html = read('index.html'), css = read('style.css');
   for (const id of ['sample-select','random-kind','random-length']) {

@@ -74,8 +74,8 @@
           </label>
         </div>
 
-        <section class="sample-panel learning-section" aria-labelledby="sample-heading">
-          <h2 id="sample-heading"></h2>
+        <details class="sample-panel learning-section" id="learning-samples" open>
+          <summary id="sample-heading"></summary>
           <label id="sample-label" for="sample-select"></label>
           <div class="sample-picker">
             <select id="sample-select" aria-describedby="sample-preview sample-note"></select>
@@ -91,7 +91,7 @@
           </div>
           <p id="random-note" class="hint"></p>
           <p id="sample-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
-        </section>
+        </details>
 
         <div class="action-buttons">
           <button id="analyze">分析する</button>
