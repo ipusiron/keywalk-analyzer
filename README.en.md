@@ -22,8 +22,8 @@ KeyWalk Analyzer is an educational tool that places learning strings on keyboard
 
 ### Quick start
 
-1. In Single analysis, select a sample or enter a string made for learning.
-2. Select a layout, then click Analyze to inspect the path and metrics.
+1. In Single analysis, select a layout and a typical example, then click Load and analyze. You can also generate random learning input.
+2. If you enter your own learning string or change the layout, click Analyze to inspect the path and metrics.
 3. In Pattern profile, enter one string per line and click Analyze patterns.
 4. Open a “?” explanation by clicking, tapping, or focusing it with the keyboard. Press Escape to close it.
 
@@ -52,6 +52,10 @@ Inspect adjacent-move counts, the eight-direction distribution, and contribution
 ![Selecting character 3 in Aa!😀 sd to inspect its incoming move](assets/en/screenshot5.png)
 
 Step inspection: on JIS, `!` maps to the `1` key, 2.062 key spacings from the preceding `a`.
+
+![Typical-example selector and random learning-input controls](assets/en/screenshot6.png)
+
+Learning samples: select and then load a typical example, or choose a character set and length to generate random input.
 
 ---
 
@@ -224,6 +228,37 @@ Open `http://127.0.0.1:8000/`.
 
 ### Single analysis
 
+#### Typical examples and random generation
+
+The sample selector groups 13 examples into walks and return paths, digits and repetition, words and mixed characters, and path breaks.
+Selecting an example previews its text without changing the input.
+Load and analyze replaces the single input, analyzes it, and returns step inspection to the first character.
+It does not change the Pattern profile input or results.
+
+These eight examples load the same text on every layout. The path you observe depends on the selected layout.
+
+| Typical example | Input | What to observe |
+|---|---|---|
+| Digits in forward order | `1234567890` | Following the number row forward |
+| Digits in reverse order | `0987654321` | Following the same number row backward |
+| Same digit repeated | `111111` | Zero-distance repeats and unavailable metrics |
+| Two alternating digits | `12121212` | Moving back and forth between two adjacent keys |
+| Repeated digit sequence | `123123123` | A three-character repetition and its return move |
+| Near-vertical sequence (JIS/US) | `1qaz` | Moves between rows and differences between layouts |
+| Letter return path (JIS/US) | `asdfdsa` | The point where movement reverses |
+| Break at a space | `asd fgh` | Keeping the path disconnected across a space |
+
+The selector also offers two layout-specific walks, common-word substitutions, a word-based example, and a fixed mixed example.
+Digits are analyzed on the selected keyboard layout, not a numpad or ATM PIN keypad.
+
+Random generation offers two sets: digits only (`0–9`) and alphanumeric (`0–9`, `A–Z`, `a–z`), with lengths of 8, 12, or 16 characters.
+The default is 12 alphanumeric characters. Generate and analyze replaces and analyzes the single input.
+It uses the browser's `crypto.getRandomValues`, selecting each character independently while avoiding modulo bias.
+Repeated characters and identical generated results are possible. A mix of letters and digits is not guaranteed.
+If generation fails, the input, analysis results, and step position are retained; no other random source is substituted. Loading and generation are disabled during IME composition.
+
+Both fixed and generated examples are for learning by comparing paths. Do not reuse them as authentication passwords or interpret high or low KDS as a security or randomness-quality assessment.
+
 These values are checked against the calculation module. Distance and H use two decimal places, and adjacency is rounded to a whole percent. `—` means not calculated. An empty input clears the on-screen metrics.
 
 | Input | Layout | Unique keys | Path length | Adjacency | H | KDS |
@@ -321,18 +356,21 @@ keywalk-analyzer/                      # Project root
 │   │   ├── screenshot2.png            # English profile, light
 │   │   ├── screenshot3.png            # English layout comparison, dark
 │   │   ├── screenshot4.png            # English calculation details, light
-│   │   └── screenshot5.png            # English step inspection, light
+│   │   ├── screenshot5.png            # English step inspection, light
+│   │   └── screenshot6.png            # English samples, light
 │   ├── favicon.svg                    # Site icon
 │   ├── screenshot.png                 # Japanese single analysis, light
 │   ├── screenshot2.png                # Japanese profile, light
 │   ├── screenshot3.png                # Japanese layout comparison, dark
 │   ├── screenshot4.png                # Japanese calculation details, light
-│   └── screenshot5.png                # Japanese step inspection, light
+│   ├── screenshot5.png                # Japanese step inspection, light
+│   └── screenshot6.png                # Japanese samples, light
 ├── test/                              # Dependency-free regression tests
 │   ├── core.test.js                   # Layouts, metrics, boundaries
 │   ├── format.test.js                 # Formatting and non-minification
 │   ├── messages.test.js               # JA/EN dictionary parity
 │   ├── readme.test.js                 # Bilingual examples, images, structure
+│   ├── samples.test.js                # Typical examples and random generation
 │   ├── security.test.js               # CSP, persistence, control structure
 │   ├── settings.test.js               # Initial preferences and storage denial
 │   └── ui.test.js                     # Layout and contrast
@@ -346,6 +384,7 @@ keywalk-analyzer/                      # Project root
 ├── SECURITY.md                        # Security measures and limits
 ├── index.html                         # Interface and meta CSP
 ├── keywalk-core.js                    # DOM-independent calculation
+├── keywalk-samples.js                 # Typical examples and random generation
 ├── keywalk-messages.js                # JA/EN analysis messages
 ├── keywalk-ui-messages.js             # JA/EN static text and attributes
 ├── package.json                       # Node.js test configuration

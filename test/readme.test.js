@@ -18,7 +18,8 @@ const headingPairs = [
   ['経路を1文字ずつ確認', 'Inspecting the path one character at a time'], ['2. 癖プロファイルモード', '2. Pattern profile'],
   ['📖 使用方法', '📖 Usage'], ['単体分析タブ', 'Single analysis tab'], ['癖プロファイルタブ', 'Pattern profile tab'],
   ['言語・テーマとローカル実行', 'Language, theme, and local use'], ['💡 サンプル入力例', '💡 Sample inputs'],
-  ['単体分析', 'Single analysis'], ['癖プロファイル', 'Pattern profile'], ['🎯 ユースケース', '🎯 Use cases'],
+  ['単体分析', 'Single analysis'], ['典型例とランダム生成', 'Typical examples and random generation'],
+  ['癖プロファイル', 'Pattern profile'], ['🎯 ユースケース', '🎯 Use cases'],
   ['⚙️ 制限事項', '⚙️ Limitations'], ['💻 技術仕様', '💻 Technical specifications'], ['フロントエンド', 'Front end'],
   ['セキュリティ', 'Security'], ['対応ブラウザー', 'Browser support'], ['🧪 テスト', '🧪 Tests'],
   ['📁 ディレクトリー構成', '📁 Directory structure'], ['⚠️ セキュリティ上の重要な注意事項', '⚠️ Important security notes'],
@@ -29,7 +30,7 @@ const headingPairs = [
 test('full README translation preserves heading order and hierarchy', () => {
   const heads = text => [...text.matchAll(/^(#{1,6}) (.+)$/gm)].map(m => [m[1], m[2]]);
   const j = heads(ja), e = heads(en);
-  assert.equal(j.length, 37);
+  assert.equal(j.length, 38);
   assert.deepEqual(j.map(h => h[1]), headingPairs.map(h => h[0]));
   assert.deepEqual(e.map(h => h[1]), headingPairs.map(h => h[1]));
   assert.deepEqual(j.map(h => h[0]), e.map(h => h[0]));
@@ -49,6 +50,18 @@ test('README metadata keeps identity and block-list structure', () => {
   assert.doesNotMatch(en, /^<!--\s*---/);
 });
 for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
+  test(file + ': eight typical-example rows match the sample module; generation limits are documented', () => {
+    const samples = require('../keywalk-samples.js');
+    const rows = [...text.matchAll(/^\| [^|`]+ \| `([^`]+)` \| [^|]+ \|$/gm)];
+    assert.deepEqual(rows.map(m => m[1]), Object.values(samples.typical));
+    for (const layout of ['jis', 'qwerty', 'dvorak']) {
+      assert.deepEqual(Object.keys(samples.typical).map(id => samples.single(layout, id)), rows.map(m => m[1]));
+    }
+    for (const value of ['`0–9`', '`A–Z`', '`a–z`', '`crypto.getRandomValues`']) assert.ok(text.includes(value));
+    assert.match(text, file === 'README.md' ? /長さは8・12・16文字/ : /lengths of 8, 12, or 16 characters/);
+    assert.match(text, file === 'README.md' ? /英数字の両方を含む保証もありません/ : /A mix of letters and digits is not guaranteed/);
+    assert.match(text, file === 'README.md' ? /認証用パスワードに転用せず/ : /Do not reuse them as authentication passwords/);
+  });
   test(file + ': all seven step-inspection rows match original characters, mapping and distances', () => {
     const rows = [...text.matchAll(/^\| ([1-7]) \| (`[^`]+`|—) \| (`[^`]+`|—) \| ([\d.]+|—) \| .+ \|$/gm)];
     const steps = core.pathSteps(core.analyze('Aa!😀 sd', 'jis'));
@@ -102,7 +115,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
   });
   test(file + ': images and relative links exist; screenshots are bounded PNGs', () => {
     const images = [...text.matchAll(/!\[[^\]]*\]\((assets\/[^)]+)\)/g)];
-    assert.equal(images.length, 5);
+    assert.equal(images.length, 6);
     for (const [, name] of images) {
       const data = fs.readFileSync(path.join(root, name));
       assert.equal(data.subarray(1, 4).toString(), 'PNG');
@@ -117,7 +130,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
   test(file + ': directory tree uses real paths, aligned comments and visible hierarchy', () => {
     const block = text.match(/```text\r?\n(keywalk-analyzer\/[\s\S]*?)\r?\n```/)[1];
     const lines = block.split(/\r?\n/), stack = [], found = [];
-    assert.equal(lines.length, 41);
+    assert.equal(lines.length, 45);
     assert.equal(new Set(lines.map(line => line.indexOf('#'))).size, 1);
     for (const line of lines.slice(1)) {
       const m = line.match(/^([│ ]*)(?:├── |└── )([^#]+?)\s+# .+$/);
@@ -129,7 +142,7 @@ for (const [file, text] of [['README.md', ja], ['README.en.md', en]]) {
       if (name.endsWith('/')) stack.push(name.slice(0, -1));
       else found.push(relative);
     }
-    assert.equal(found.length, 35);
+    assert.equal(found.length, 39);
     const actual = [];
     // Ignored personal directories are not distributed project files.
     const ignoredDirs = new Set(read('.gitignore').split(/\r?\n/)

@@ -74,17 +74,24 @@
           </label>
         </div>
 
-        <div class="preset-group">
-          <div class="small">
-            サンプル:
-            <button type="button" class="help-icon" data-tooltip="サンプルを押すと、選択した配列の例を読み込んで分析します。配列だけを変えても入力は書き換えません。">?</button>
+        <section class="sample-panel learning-section" aria-labelledby="sample-heading">
+          <h2 id="sample-heading"></h2>
+          <label id="sample-label" for="sample-select"></label>
+          <div class="sample-picker">
+            <select id="sample-select" aria-describedby="sample-preview sample-note"></select>
+            <button type="button" id="load-sample" class="secondary"></button>
           </div>
-          <button class="preset-btn" data-preset="walk1">歩き①</button>
-          <button class="preset-btn" data-preset="walk2">歩き②</button>
-          <button class="preset-btn" data-preset="common">一般的</button>
-          <button class="preset-btn" data-preset="dict">辞書系</button>
-          <button class="preset-btn" data-preset="strong">混在例</button>
-        </div>
+          <p id="sample-preview"></p>
+          <p id="sample-note" class="hint"></p>
+          <h3 id="random-heading"></h3>
+          <div class="random-controls">
+            <div><label id="random-kind-label" for="random-kind"></label><select id="random-kind"></select></div>
+            <div><label id="random-length-label" for="random-length"></label><select id="random-length"></select></div>
+            <button type="button" id="generate-sample" class="secondary"></button>
+          </div>
+          <p id="random-note" class="hint"></p>
+          <p id="sample-feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+        </section>
 
         <div class="action-buttons">
           <button id="analyze">分析する</button>
@@ -332,6 +339,7 @@ Hello123!" autocomplete="off" autocapitalize="off" spellcheck="false" aria-descr
   </div>
 
   <script src="./keywalk-core.js"></script>
+  <script src="./keywalk-samples.js"></script>
   <script src="./keywalk-messages.js"></script>
   <script src="./keywalk-ui-messages.js"></script>
   <script src="./script.js"></script>

@@ -32,6 +32,7 @@ keywalk-analyzer/
 ├── index.html                 # Structure, meta CSP and accessible controls
 ├── settings.js                # Validated theme/language before CSS
 ├── keywalk-core.js            # Pure geometry and aggregation; CommonJS/browser
+├── keywalk-samples.js         # Typical examples and random learning strings
 ├── keywalk-messages.js        # Dynamic JA/EN messages
 ├── keywalk-ui-messages.js     # Static JA/EN text and attribute dictionary
 ├── script.js                  # Per-tab state, rendering and event binding
@@ -77,6 +78,14 @@ Unavailable KDS keeps all factors and contributions null, not zero. Round only t
 Displayed three-decimal factors/contributions are explanatory approximations, not new calculation inputs.
 
 ### 3. Key Detection Algorithms
+
+Single samples live in `keywalk-samples.js`: five layout-specific examples and eight fixed examples shared by all layouts.
+`random(kind, length, fill)` uses crypto.getRandomValues with rejection sampling (digits reject bytes >=250, alphanumeric >=248).
+Allowed lengths are 8, 12 and 16; at most 32 batches of 32 bytes. Failure returns no partial output and never falls back to Math.random.
+Generation is for learning, not authentication; independent selections may repeat and need not contain every character class.
+The grouped select only previews. Explicit load/generate replaces and analyzes single input, resetting step position without touching profile.
+Generation failure preserves input, models and step position. IME composition disables both buttons and is guarded in handlers.
+`renderSamples` preserves selections and translates feedback without generating or recalculating.
 
 - Adjacency: different keys with absolute dx and dy at most 1
 - Walk: at least 3 consecutive adjacent keys, without crossing unknown input or same-key repeats
