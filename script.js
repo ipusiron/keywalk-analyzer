@@ -1,6 +1,7 @@
 /* KeyWalk Analyzer: DOM rendering over the independent KeyWalkCore model. */
 const Core = KeyWalkCore;
 const state = {single: null, comparison: null, profile: null, singleNotice: '', profileNotice: ''};
+const stepState = {steps: [], index: 0};
 const composing = {single: false, profile: false};
 function t(key, args = {}) {
   const language = document.documentElement.lang === 'en' ? 'en' : 'ja';
@@ -168,6 +169,8 @@ function addLi(ul, text) {
 function resetSingle() {
   state.single = null;
   state.comparison = null;
+  stepState.steps = [];
+  stepState.index = 0;
   ['m-unique','m-length','m-turns','m-adj','m-dirh','m-cv','m-knight','m-kds'].forEach(id => setText(id, '—'));
   document.getElementById('d-list').replaceChildren();
 }
@@ -186,6 +189,7 @@ function analyzeSingle() {
     else {
       state.comparison = Core.compareLayouts(raw);
       state.single = state.comparison.find(r => r.layout === document.getElementById('layout').value);
+      stepState.steps = Core.pathSteps(state.single);
     }
   } catch (error) {
     state.singleNotice = Object.hasOwn(KeyWalkMessages.ja, error.message) ? error.message : 'error';
@@ -258,7 +262,9 @@ function renderProfile() {
 }
 function drawResults() {
   drawKeyboards();
-  if (state.single) {
+  if (state.single && document.getElementById('path-inspector').open) {
+    drawStep();
+  } else if (state.single) {
     let remaining = Core.LIMITS.plot;
     for (const segment of state.single.segments) {
       const points = segment.slice(0, remaining).map(p => ({...p, x:16 + 78*p.x, y:70 + 78*p.y}));
@@ -281,10 +287,50 @@ function drawResults() {
     pctx.globalAlpha = 1;
   }
 }
+function drawStep() {
+  const s = stepState.steps[stepState.index];
+  if (!s?.point) return;
+  const pair = s.previous && s.distance > 0 ? [s.previous, s.point] : [s.point];
+  plotPath(pair.map(p => ({...p, x:16 + 78*p.x, y:70 + 78*p.y})), document.getElementById('mode').value);
+  const p = s.point;
+  ctx.save();
+  ctx.strokeStyle = document.documentElement.dataset.theme === 'light' ? '#10152f' : '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.shadowBlur = 0;
+  ctx.strokeRect(16 + 78*p.x - 8, 70 + 78*p.y - 32, 70, 64);
+  ctx.restore();
+}
+function scrollStepKey() {
+  const s = stepState.steps[stepState.index];
+  if (!document.getElementById('path-inspector').open || !s?.point) return;
+  const region = canvas.parentElement;
+  const center = (43 + 78*s.point.x) * canvas.getBoundingClientRect().width / 1100;
+  region.scrollLeft = Math.max(0, center - region.clientWidth / 2);
+}
 function textElement(tag, text) {
   const element = document.createElement(tag);
   element.textContent = text;
   return element;
+}
+function renderSteps() {
+  const panel = document.getElementById('path-inspector');
+  panel.hidden = !state.single;
+  setText('step-title', t('stepTitle'));
+  setText('step-note', t('stepNote'));
+  for (const name of ['first', 'prev', 'next', 'last']) {
+    const button = document.getElementById('step-' + name);
+    button.textContent = t('step_' + name);
+    button.disabled = !stepState.steps.length || (['first', 'prev'].includes(name)
+      ? stepState.index === 0 : stepState.index === stepState.steps.length - 1);
+  }
+  if (!state.single) { panel.open = false; setText('step-status', ''); return; }
+  const s = stepState.steps[stepState.index];
+  setText('step-status', t('stepPosition', {
+    position: s.index + 1, total: stepState.steps.length, char: Core.visible(s.char),
+    key: s.point ? Core.visible(s.point.key) : '—',
+    previous: s.previous ? (s.previous.index + 1) + ': ' + Core.visible(s.previous.char) : '—',
+    distance: number(s.distance, 3)
+  }) + ' ' + t('step_kind_' + s.kind));
 }
 function renderComparison() {
   const section = document.getElementById('layout-comparison');
@@ -368,7 +414,7 @@ function renderCalculation() {
   }
   body.append(textElement('p', t('reference')));
 }
-function renderAll() { renderSingle(); renderProfile(); renderComparison(); renderCalculation(); drawResults(); }
+function renderAll() { renderSingle(); renderProfile(); renderComparison(); renderCalculation(); renderSteps(); drawResults(); }
 function invalidate(tab) {
   if (tab === 'single') resetSingle(); else resetProfileMetrics();
   state[tab + 'Notice'] = 'dirty';
@@ -422,6 +468,18 @@ const PRESETS_PROFILE = {
 };
 
 function bind(){
+  document.getElementById('path-inspector').addEventListener('toggle', () => { drawResults(); scrollStepKey(); });
+  for (const name of ['first', 'prev', 'next', 'last']) {
+    document.getElementById('step-' + name).addEventListener('click', () => {
+      if (!stepState.steps.length) return;
+      const last = stepState.steps.length - 1;
+      const next = name === 'first' ? 0 : name === 'last' ? last : stepState.index + (name === 'next' ? 1 : -1);
+      stepState.index = Math.max(0, Math.min(last, next));
+      renderSteps();
+      drawResults();
+      scrollStepKey();
+    });
+  }
   // タブ
   const btnSingle = document.getElementById('tabbtn-single');
   const btnProfile= document.getElementById('tabbtn-profile');

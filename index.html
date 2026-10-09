@@ -93,6 +93,17 @@
       </div>
 
       <div class="card">
+        <details class="learning-section step-inspector" id="path-inspector" hidden>
+          <summary id="step-title"></summary>
+          <p id="step-note"></p>
+          <div class="step-controls" role="group" aria-labelledby="step-title">
+            <button type="button" class="secondary" id="step-first"></button>
+            <button type="button" class="secondary" id="step-prev"></button>
+            <button type="button" class="secondary" id="step-next"></button>
+            <button type="button" class="secondary" id="step-last"></button>
+          </div>
+          <p id="step-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </details>
         <div class="keyboard-scroll" tabindex="0" role="region" aria-label="キーボード図。左右にスクロールできます">
           <canvas id="keyboard-canvas" width="1100" height="420" aria-label="単体分析の経路図"></canvas>
         </div>

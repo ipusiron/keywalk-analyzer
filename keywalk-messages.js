@@ -4,6 +4,16 @@
   else root.KeyWalkMessages = messages;
 })(globalThis, function() {
   return {ja: {
+    stepTitle: '経路を1文字ずつ確認',
+    stepNote: '枠は現在のキー、線は直前からの移動です。元の文字位置を追う表示で、打鍵記録ではありません。'
+      + '全体の分析値は変わりません。閉じると全体図に戻ります。',
+    step_first: '最初へ', step_prev: '前へ', step_next: '次へ', step_last: '最後へ',
+    stepPosition: '{position} / {total}文字目：「{char}」 → キー「{key}」。直前の対応文字：{previous}。距離：{distance}（キー間隔）。',
+    step_kind_start: '経路の始点です。直前からの距離は算出しません。',
+    step_kind_restart: '未対応文字の後の始点です。区切りをまたぐ距離は算出しません。',
+    step_kind_unknown: '未対応文字です。経路を区切り、この位置のキーや移動は描きません。',
+    step_kind_repeat: '同じキーの繰り返しです。距離は0で、隣接移動には数えません。',
+    step_kind_adjacent: '異なる隣接キーへの移動です。', step_kind_jump: '隣接しないキーへの移動です。',
     calculationTitle: '計算根拠を開く・閉じる', calculationFor: '{layout}の計算内訳',
     adjacencyMath: '隣接キー比率 = 隣接移動 {count} 回 / 有効なキー対 {total} 組 = {value}',
     movementMath: '有効なキー対 {total} 組のうち同じキー {repeats} 回、非ゼロ移動 {moving} 回。総移動距離 {distance}（キー間隔）。',
@@ -67,6 +77,16 @@
     error: '分析できませんでした。入力と配列を確認してください。',
     help: '説明を開く', toggleLanguage: '言語を切り替える'
   }, en: {
+    stepTitle: 'Inspect the path one character at a time',
+    stepNote: 'The outline marks the current key; the line shows its incoming move. These are input positions, not recorded keystrokes. '
+      + 'Overall results stay unchanged. Close to restore the overview.',
+    step_first: 'First', step_prev: 'Previous', step_next: 'Next', step_last: 'Last',
+    stepPosition: 'Character {position} / {total}: “{char}” → key “{key}”. Previous mapped character: {previous}. Distance: {distance} (key spacing).',
+    step_kind_start: 'Start of the path. There is no incoming distance to calculate.',
+    step_kind_restart: 'Start after an unsupported character. No distance is calculated across the break.',
+    step_kind_unknown: 'Unsupported character. The path breaks here; no key or move is drawn for this position.',
+    step_kind_repeat: 'Same key repeated. Distance is 0; this is not counted as an adjacent move.',
+    step_kind_adjacent: 'Move to a different adjacent key.', step_kind_jump: 'Move to a non-adjacent key.',
     calculationTitle: 'Show / hide calculation details', calculationFor: 'Calculation details for {layout}',
     adjacencyMath: 'Adjacent-key ratio = {count} adjacent moves / {total} valid key pairs = {value}',
     movementMath: '{total} valid key pairs: {repeats} same-key repetitions and {moving} nonzero moves. Total distance: {distance} (key spacing).',
