@@ -4,6 +4,10 @@
   else root.KeyWalkMessages = messages;
 })(globalThis, function() {
   return {ja: {
+    profileSampleLabel:'複数行の例を選ぶ', profileSamplePreview:'読み込む5行：',
+    profileSample_basic:'基本', profileSample_year:'年号', profileSample_keyboard:'歩き（配列別）', profileSample_random:'固定の混在例',
+    profileSampleNote:'選択だけでは入力を変えません。「読み込んで分析」でこのタブの入力を5行の例に置き換え、選択中の配列で分析します。固定の混在例はランダム生成ではありません。認証には使わないでください。',
+    profileSampleLoaded:'5行の学習用サンプルを読み込み、分析しました。',
     sampleHeading:'学習用サンプル', sampleLabel:'典型例を選ぶ', sampleLoad:'読み込んで分析',
     sampleNote:'選択だけでは入力を変えません。読み込むと入力を置き換えます。数字も選択中の配列で分析し、テンキーやATMの配置は扱いません。',
     samplePreview:'入力例：{text}（{description}）', sampleLoaded:'典型例を読み込み、分析しました。逐次表示は最初の文字から確認できます。',
@@ -92,6 +96,12 @@
     error: '分析できませんでした。入力と配列を確認してください。',
     help: '説明を開く', toggleLanguage: '言語を切り替える'
   }, en: {
+    profileSampleLabel:'Choose a multiline example', profileSamplePreview:'Five lines to load:',
+    profileSample_basic:'Basic', profileSample_year:'Years', profileSample_keyboard:'Keyboard walks (by layout)', profileSample_random:'Fixed mixed example',
+    profileSampleNote:'Selecting an example does not change the input. '
+      + 'Load and analyze replaces this tab’s input with five example lines and analyzes them using the selected layout. '
+      + 'The fixed mixed example is not randomly generated. Do not use these examples for authentication.',
+    profileSampleLoaded:'Loaded and analyzed five learning-sample lines.',
     sampleHeading:'Learning samples', sampleLabel:'Choose a typical example', sampleLoad:'Load and analyze',
     sampleNote:'Selecting an example does not change the input. Loading replaces it. Digits use the selected keyboard layout, not a numpad or ATM keypad.',
     samplePreview:'Example: {text} ({description})', sampleLoaded:'Example loaded and analyzed. Step inspection starts at the first character.',

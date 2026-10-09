@@ -57,6 +57,10 @@ Step inspection: on JIS, `!` maps to the `1` key, 2.062 key spacings from the pr
 
 Learning samples: select and then load a typical example, or choose a character set and length to generate random input.
 
+![Pattern profile learning samples with a five-line preview](assets/en/screenshot7.png)
+
+Pattern profile learning samples: choose one of four sets and check the five lines before loading. The panel can be collapsed and is expanded by default.
+
 ---
 
 ## 👥 Intended users
@@ -208,6 +212,8 @@ Open or close the calculation panel by clicking, tapping, or pressing Enter or S
 
 Enter one learning string per line. Its input, layout, and results are independent of Single analysis. Clear removes the current tab's input and results, not the other tab or the clipboard.
 
+Learning samples is expanded by default and can be collapsed. Choose Basic, Years, Keyboard walks (by layout), or Fixed mixed example, check the five-line preview, then press Load and analyze. Selecting an example or opening and closing the panel does not change input or results. Loading replaces and analyzes only this tab's input. The fixed mixed example is not randomly generated and is not intended for authentication.
+
 You can select tabs with the left/right arrows, Home, and End. On narrow screens, scroll the keyboard diagram horizontally. Read the metrics and findings as well as the diagram.
 
 ### Language, theme, and local use
@@ -358,14 +364,16 @@ keywalk-analyzer/                      # Project root
 │   │   ├── screenshot3.png            # English layout comparison, dark
 │   │   ├── screenshot4.png            # English calculation details, light
 │   │   ├── screenshot5.png            # English step inspection, light
-│   │   └── screenshot6.png            # English samples, light
+│   │   ├── screenshot6.png            # English samples, light
+│   │   └── screenshot7.png            # English profile samples, light
 │   ├── favicon.svg                    # Site icon
 │   ├── screenshot.png                 # Japanese single analysis, light
 │   ├── screenshot2.png                # Japanese profile, light
 │   ├── screenshot3.png                # Japanese layout comparison, dark
 │   ├── screenshot4.png                # Japanese calculation details, light
 │   ├── screenshot5.png                # Japanese step inspection, light
-│   └── screenshot6.png                # Japanese samples, light
+│   ├── screenshot6.png                # Japanese samples, light
+│   └── screenshot7.png                # Japanese profile samples, light
 ├── test/                              # Dependency-free regression tests
 │   ├── core.test.js                   # Layouts, metrics, boundaries
 │   ├── format.test.js                 # Formatting and non-minification
