@@ -99,6 +99,7 @@
       ? Math.sqrt(steps.reduce((sum, n) => sum + (n - mean) ** 2, 0) / transitions) / mean : null;
     return {
       distance, turns: turnPairs ? turns : null, transitions, moving, repeats, bins, entropy, cv,
+      adjacentCount, knightCount, turnPairs,
       adjacent: transitions ? adjacentCount / transitions : null,
       knight: transitions ? knightCount / transitions : null
     };
@@ -128,18 +129,28 @@
     const straight = eligible && metrics.turns !== null && metrics.turns <= 1;
     const lowH = eligible && metrics.entropy < 1.5, lowCV = eligible && metrics.cv < 0.25;
     const pattern = known.length > 0 || foundWalks.length > 0 || repeated.length > 0;
-    const kds = eligible ? Math.round(100 * (
-      0.30 * Math.min(1, metrics.adjacent / 0.7) +
-      0.25 * Math.max(0, (1.5 - metrics.entropy) / 1.5) +
-      0.20 * Number(straight) + 0.15 * Number(pattern) +
-      0.10 * Math.max(0, (0.25 - metrics.cv) / 0.25)
-    )) : null;
+    const kdsBreakdown = [
+      ['adjacency', 0.30, Math.min(1, metrics.adjacent / 0.7)],
+      ['direction', 0.25, Math.max(0, (1.5 - metrics.entropy) / 1.5)],
+      ['turns', 0.20, Number(straight)], ['pattern', 0.15, Number(pattern)],
+      ['variation', 0.10, Math.max(0, (0.25 - metrics.cv) / 0.25)]
+    ].map(([id, weight, factor]) => ({
+      id, maximum: weight * 100, factor: eligible ? factor : null,
+      contribution: eligible ? 100 * weight * factor : null
+    }));
+    // Preserve the order and precision of the reference formula; round only the final score.
+    const kdsRaw = eligible ? 100 * kdsBreakdown.reduce((sum, part) => sum + part.maximum / 100 * part.factor, 0) : null;
+    const kds = kdsRaw === null ? null : Math.round(kdsRaw);
     return {
       layout, characters: Array.from(text).length, ...mapped, ...metrics,
       unique: new Set(mapped.points.map(p => p.key)).size,
-      known, walks: foundWalks, repeated, straight, lowH, lowCV, kds,
+      known, walks: foundWalks, repeated, straight, lowH, lowCV, kds, kdsRaw, kdsBreakdown,
       kdsReason: mapped.unknown.length ? 'incomplete' : 'insufficient'
     };
+  }
+  function compareLayouts(text) {
+    // Fixed presentation order, not a ranking. Each layout maps the unchanged input independently.
+    return ['jis', 'qwerty', 'dvorak'].map(layout => analyze(text, layout));
   }
   function tallyRules(lines, rules) {
     return rules.map(([id, regex]) => ({id, count: lines.filter(line => regex.test(line)).length})).filter(x => x.count);
@@ -203,5 +214,5 @@
         ? `[U+${cp.toString(16).toUpperCase().padStart(4, '0')}]` : ch;
     }).join('');
   }
-  return {LIMITS, keys, mapText, adjacent, knight, walks, geometry, analyze, profile, prefixes, suffixes, zones, visible};
+  return {LIMITS, keys, mapText, adjacent, knight, walks, geometry, analyze, compareLayouts, profile, prefixes, suffixes, zones, visible};
 });

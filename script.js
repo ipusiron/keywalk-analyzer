@@ -1,6 +1,6 @@
 /* KeyWalk Analyzer: DOM rendering over the independent KeyWalkCore model. */
 const Core = KeyWalkCore;
-const state = {single: null, profile: null, singleNotice: '', profileNotice: ''};
+const state = {single: null, comparison: null, profile: null, singleNotice: '', profileNotice: ''};
 const composing = {single: false, profile: false};
 function t(key, args = {}) {
   const language = document.documentElement.lang === 'en' ? 'en' : 'ja';
@@ -167,6 +167,7 @@ function addLi(ul, text) {
 }
 function resetSingle() {
   state.single = null;
+  state.comparison = null;
   ['m-unique','m-length','m-turns','m-adj','m-dirh','m-cv','m-knight','m-kds'].forEach(id => setText(id, '—'));
   document.getElementById('d-list').replaceChildren();
 }
@@ -182,7 +183,10 @@ function analyzeSingle() {
   try {
     const raw = document.getElementById('pwd').value;
     if (!raw) state.singleNotice = 'empty';
-    else state.single = Core.analyze(raw, document.getElementById('layout').value);
+    else {
+      state.comparison = Core.compareLayouts(raw);
+      state.single = state.comparison.find(r => r.layout === document.getElementById('layout').value);
+    }
   } catch (error) {
     state.singleNotice = Object.hasOwn(KeyWalkMessages.ja, error.message) ? error.message : 'error';
   }
@@ -277,7 +281,94 @@ function drawResults() {
     pctx.globalAlpha = 1;
   }
 }
-function renderAll() { renderSingle(); renderProfile(); drawResults(); }
+function textElement(tag, text) {
+  const element = document.createElement(tag);
+  element.textContent = text;
+  return element;
+}
+function renderComparison() {
+  const section = document.getElementById('layout-comparison');
+  section.replaceChildren();
+  section.hidden = !state.comparison;
+  if (!state.comparison) return;
+  const heading = textElement('h2', t('comparisonTitle'));
+  heading.id = 'comparison-title';
+  section.append(heading, textElement('p', t('comparisonNote')));
+  const grid = document.createElement('div');
+  grid.className = 'comparison-grid';
+  for (const r of state.comparison) {
+    const card = document.createElement('article');
+    card.className = 'comparison-layout';
+    card.dataset.layout = r.layout;
+    card.append(textElement('h3', t('layout_' + r.layout)));
+    const selected = r.layout === state.single.layout;
+    card.append(textElement('p', t(selected ? 'selectedLayout' : 'comparisonLayout')));
+    const list = document.createElement('dl');
+    for (const [label, value] of [
+      ['adjacencyLabel', percent(r.adjacent)], ['distanceLabel', number(r.distance, 2)],
+      ['entropyLabel', number(r.entropy, 2)], ['cvLabel', number(r.cv, 2)], ['kdsLabel', number(r.kds)],
+      ['mappedLabel', r.points.length + ' / ' + r.characters], ['unknownLabel', r.unknown.length]
+    ]) {
+      const row = document.createElement('div');
+      row.append(textElement('dt', t(label)), textElement('dd', value));
+      list.append(row);
+    }
+    card.append(list);
+    if (r.kds === null) card.append(textElement('p', t(r.kdsReason)));
+    grid.append(card);
+  }
+  section.append(grid);
+}
+function renderCalculation() {
+  const details = document.getElementById('calculation-details');
+  const body = document.getElementById('calculation-body');
+  const r = state.single;
+  details.hidden = !r;
+  body.replaceChildren();
+  setText('calculation-summary', t('calculationTitle'));
+  if (!r) { details.open = false; return; }
+  body.append(textElement('h2', t('calculationFor', {layout:t('layout_' + r.layout)})));
+  const counts = document.createElement('ul');
+  counts.id = 'calculation-counts';
+  addLi(counts, t('adjacencyMath', {count:r.adjacentCount, total:r.transitions, value:percent(r.adjacent)}));
+  addLi(counts, t('movementMath', {total:r.transitions, repeats:r.repeats, moving:r.moving, distance:number(r.distance, 3)}));
+  addLi(counts, t('turnMath', {turns:number(r.turns), pairs:r.turnPairs}));
+  addLi(counts, t('cvMath', {value:number(r.cv, 3)}));
+  if (!r.transitions) addLi(counts, t('noPairs'));
+  if (r.cv === null) addLi(counts, t('noCV'));
+  body.append(counts, textElement('h3', t('directionsTitle')), textElement('p', t('directionsNote')));
+  const directions = document.createElement('ul');
+  directions.id = 'direction-counts';
+  directions.className = 'direction-counts';
+  r.bins.forEach((count, index) => addLi(directions, t('directionCount', {
+    direction:t('direction_' + index), count, total:r.moving,
+    share:r.moving ? (100 * count / r.moving).toFixed(1) + '%' : '—'
+  })));
+  body.append(directions, textElement('p', t('entropyMath', {value:number(r.entropy, 3)})));
+  if (!r.moving) body.append(textElement('p', t('noDirection')));
+  body.append(textElement('h3', t('kdsPartsTitle')), textElement('p', t('kdsPartsNote')));
+  body.append(textElement('p', t('kdsInputs', {
+    adjacent:number(r.adjacent, 3), entropy:number(r.entropy, 3), turns:number(r.turns), cv:number(r.cv, 3),
+    known:r.known.length, walks:r.walks.length, repeated:r.repeated.length
+  })));
+  if (r.kds === null) body.append(textElement('p', t(r.kdsReason)));
+  const parts = document.createElement('ol');
+  parts.id = 'kds-parts';
+  for (const part of r.kdsBreakdown) {
+    const li = document.createElement('li');
+    li.append(textElement('h4', t('part_' + part.id)), textElement('p', t('formula_' + part.id)),
+      textElement('p', t('partValue', {maximum:part.maximum, factor:number(part.factor, 3), value:number(part.contribution, 3)})));
+    parts.append(li);
+  }
+  body.append(parts);
+  if (r.kds !== null) {
+    const total = textElement('p', t('kdsTotal', {raw:number(r.kdsRaw, 3), value:r.kds}));
+    total.id = 'kds-total';
+    body.append(total);
+  }
+  body.append(textElement('p', t('reference')));
+}
+function renderAll() { renderSingle(); renderProfile(); renderComparison(); renderCalculation(); drawResults(); }
 function invalidate(tab) {
   if (tab === 'single') resetSingle(); else resetProfileMetrics();
   state[tab + 'Notice'] = 'dirty';

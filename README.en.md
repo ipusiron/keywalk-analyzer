@@ -41,9 +41,13 @@ Single analysis: an example with 100% adjacency and a path length of 5.00 key un
 
 Pattern profile: frequency counts for learning samples.
 
-![Single analysis in the dark theme](assets/en/screenshot3.png)
+![Comparing aoeuid across three layouts in the dark theme](assets/en/screenshot3.png)
 
-The dark theme displays the same values.
+The same string can have different adjacency ratios and distances on different layouts. Layouts appear in a fixed order, not a ranking.
+
+![Metric and KDS calculation details for qwerty123!](assets/en/screenshot4.png)
+
+Inspect adjacent-move counts, the eight-direction distribution, and contributions from the five KDS components.
 
 ---
 
@@ -110,6 +114,33 @@ KDS is shown only when there are no unsupported characters, at least 4 mapped ch
 
 Detection covers adjacent walks of at least 3 characters, 7 listed words, and repeated substrings of 2–4 characters (at least 3 occurrences, including overlaps). The words are `qwerty`, `asdf`, `zxcv`, `1234`, `password`, `pass`, and `admin`. No match is not evidence of safety.
 
+#### Layout comparison and calculation details
+
+Single analysis compares the unchanged input across JIS, QWERTY, and Dvorak in that fixed order.
+It shows adjacency, total distance, H, CV, and KDS, along with mapped and unsupported character counts.
+Each layout maps the input independently, so unsupported characters and KDS availability may differ.
+This is not a ranking or a comparison of security.
+
+Open “Show / hide calculation details” to inspect the layout selected for the diagram.
+The panel shows the adjacency numerator and denominator, zero-distance repetitions, comparable turn pairs, counts and shares for eight directions, and KDS factors and contributions.
+It also explains why H is unavailable without nonzero moves, or why CV is unavailable with fewer than two key pairs or a zero mean distance.
+When KDS is unavailable, each factor and contribution is “—”, not zero.
+
+The KDS breakdown for `qwerty123!` on JIS is shown below.
+Factors and contributions are displayed to three decimal places; calculations use unrounded values.
+
+| Component ID | Maximum contribution | Factor | Contribution |
+|---|---:|---:|---:|
+| adjacency | 30 | 1.000 | 30.000 |
+| direction | 25 | 0.491 | 12.263 |
+| turns | 20 | 0.000 | 0.000 |
+| pattern | 15 | 1.000 | 15.000 |
+| variation | 10 | 0.000 | 0.000 |
+
+The contribution total is displayed as 57.263, and KDS rounded to an integer is 57.
+Finding any listed word, walk, or repeated substring adds the maximum contribution of 15; additional matches do not add more points.
+Multiplying or summing the displayed values may differ from the internal calculation with unrounded values.
+
 ### 2. Pattern profile
 
 Multiple lines are summarized as a key-frequency heatmap, the top 8 keys, the top 5 bigrams, prefix/suffix formats, and fixed-region percentages. Heatmap intensity is relative to the most frequent key in the supplied set.
@@ -130,6 +161,10 @@ These counts cannot establish whether strings came from the same person or how t
 ### Single analysis tab
 
 Enter a string, select a layout, and analyze it. Editing the input or changing the layout clears that tab's results. Changing the display mode, language, or theme redraws the retained results.
+
+Layout comparison and calculation details follow the same result state.
+To inspect another layout's details, select that layout and analyze again. The input string is retained.
+Open or close the calculation panel by clicking, tapping, or pressing Enter or Space while its summary has focus.
 
 ### Pattern profile tab
 
@@ -250,11 +285,13 @@ keywalk-analyzer/                      # Project root
 │   ├── en/                            # English screenshots
 │   │   ├── screenshot.png             # English single analysis, light
 │   │   ├── screenshot2.png            # English profile, light
-│   │   └── screenshot3.png            # English single analysis, dark
+│   │   ├── screenshot3.png            # English layout comparison, dark
+│   │   └── screenshot4.png            # English calculation details, light
 │   ├── favicon.svg                    # Site icon
 │   ├── screenshot.png                 # Japanese single analysis, light
 │   ├── screenshot2.png                # Japanese profile, light
-│   └── screenshot3.png                # Japanese single analysis, dark
+│   ├── screenshot3.png                # Japanese layout comparison, dark
+│   └── screenshot4.png                # Japanese calculation details, light
 ├── test/                              # Dependency-free regression tests
 │   ├── core.test.js                   # Layouts, metrics, boundaries
 │   ├── format.test.js                 # Formatting and non-minification
