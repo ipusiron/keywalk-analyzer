@@ -10,7 +10,7 @@
 /* ============================================================
  * フォント読み込み
  * ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+/* System fonts only: opening this page does not request a third-party font. */
 
 /* ============================================================
  * CSS カスタムプロパティ（ダークモード）
@@ -57,9 +57,9 @@
   --neon-cyan:#0055bb;
   --neon-magenta:#b3007d;
   --neon-purple:#5500bb;
-  --neon-green:#008822;
+  --neon-green:#006b1b;
   --neon-red:#bb0022;
-  --neon-yellow:#b38800;
+  --neon-yellow:#795800;
   --text-primary:#1a1a2e;
   --text-muted:#4a5568;
   --text-on-primary:#ffffff;
@@ -89,7 +89,7 @@
 *{box-sizing:border-box}
 
 /* HTML, BODY の基本設定 */
-html,body{height:100%;margin:0;overflow-x:hidden}
+html,body{min-height:100%;margin:0}
 
 /* BODY: サイバーパンク風背景とスキャンラインエフェクト */
 body{
@@ -102,15 +102,11 @@ body{
   background-blend-mode:normal,normal,overlay,overlay;
   color:var(--text-primary);
   font-family:'Rajdhani',ui-sans-serif,system-ui,sans-serif;
-  padding:20px;
+  padding:12px;
   position:relative;
   transition:background 0.5s ease,color 0.5s ease
 }
-body::before{
-  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
-  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.15),rgba(0,0,0,0.15) 1px,transparent 1px,transparent 2px);
-  pointer-events:none;opacity:var(--scanline-opacity);animation:scanlines 8s linear infinite
-}
+body::before{display:none}
 /* スキャンラインアニメーション（CRT風エフェクト） */
 @keyframes scanlines{
   0%{transform:translateY(0)}
@@ -125,17 +121,17 @@ body::before{
 .app{max-width:1100px;margin:0 auto;position:relative;z-index:1}
 
 /* ヘッダー */
-header{display:flex;flex-direction:column;gap:12px;align-items:flex-start;margin-bottom:20px}
-.header-top{display:flex;justify-content:space-between;align-items:center;width:100%;gap:20px}
+header{display:flex;flex-direction:column;gap:12px;align-items:center;margin-bottom:20px;text-align:center}
+.header-top{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;width:100%;gap:16px}
+.header-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
 
 /* タイトル: グリッチアニメーション付き */
 h1{
-  font-family:'Orbitron',monospace;font-size:28px;margin:0;font-weight:900;
-  background:linear-gradient(135deg,var(--neon-cyan),var(--neon-magenta));
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  font-family:ui-sans-serif,system-ui,sans-serif;font-size:clamp(1.4rem,4vw,2rem);margin:0;font-weight:900;
+  color:var(--text-primary);
   filter:drop-shadow(0 0 20px var(--shadow-color));
   letter-spacing:2px;text-transform:uppercase;
-  animation:glitch 3s infinite
+  overflow-wrap:anywhere
 }
 
 /* ============================================================
@@ -178,7 +174,7 @@ h1{
   font-size:15px;
   line-height:1.7;
   font-weight:500;
-  opacity:0.9;
+  opacity:1;
   background:var(--metric-bg);
   padding:12px 16px;
   border-radius:6px;
@@ -193,19 +189,15 @@ h1{
   box-shadow:0 0 20px rgba(0,240,255,0.1),inset 0 0 60px rgba(0,240,255,0.03);
   position:relative;overflow:visible
 }
-.card::before{
-  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(0,240,255,0.1),transparent);
-  transition:left 0.5s
-}
-.card:hover::before{left:100%}
+.card::before{display:none}
+.card{min-width:0;overflow-wrap:anywhere}
 
 /* ============================================================
  * タブ・ナビゲーション
  * ============================================================ */
 
 /* タブコンテナ */
-.tabs{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.tabs{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;justify-content:center}
 
 /* タブボタン: 単体分析 / 癖プロファイル */
 .tabs button{
@@ -239,12 +231,12 @@ textarea{
   background:var(--input-bg);
   color:var(--text-primary);
   border:1px solid var(--input-border);border-radius:4px;padding:12px;resize:vertical;
-  font-family:'Courier New',monospace;line-height:1.6;font-size:14px;
+  font-family:'Courier New',monospace;line-height:1.6;font-size:16px;
   transition:all 0.3s ease
 }
 textarea::placeholder{
   color:var(--text-muted);
-  opacity:0.6
+  opacity:1
 }
 textarea:focus{
   outline:none;
@@ -254,11 +246,16 @@ textarea:focus{
 }
 #pwds{min-height:140px}
 .hint{
-  font-size:11px;color:var(--neon-cyan);margin-top:8px;opacity:0.7;
+  font-size:14px;color:var(--text-muted);margin-top:12px;opacity:1;
   font-family:'Courier New',monospace;letter-spacing:0.5px
 }
-.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.preset-group{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--metric-border)}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.controls label{min-width:0;flex:1}
+.controls select{width:100%;min-width:0}
+.preset-group{
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;
+  padding-top:12px;border-top:1px solid var(--metric-border)
+}
 .preset-btn,.preset-btn-profile{
   background:transparent;border:1px solid var(--metric-border);
   padding:6px 12px;border-radius:3px;color:var(--text-muted);cursor:pointer;
@@ -282,9 +279,9 @@ textarea:focus{
 }
 .help-icon{
   display:inline-flex;align-items:center;justify-content:center;
-  width:16px;height:16px;border-radius:50%;
+  width:44px;height:44px;padding:0;border-radius:50%;
   background:var(--metric-border);color:var(--text-muted);
-  font-size:11px;font-weight:700;cursor:help;
+  font-size:16px;font-weight:700;cursor:help;
   transition:all 0.3s ease;position:relative;
   font-family:'Orbitron',monospace;text-transform:none;
   flex-shrink:0
@@ -299,7 +296,7 @@ textarea:focus{
   border:2px solid var(--neon-cyan);
   padding:12px 16px;
   border-radius:6px;
-  font-size:12px;
+  font-size:14px;
   font-weight:400;
   line-height:1.5;
   color:var(--text-primary);
@@ -318,7 +315,7 @@ textarea:focus{
   transition:opacity 0.2s ease, visibility 0.2s ease
 }
 .tooltip-content::before{
-  content:'';
+  content:'';display:none;
   position:absolute;
   border:6px solid transparent
 }
@@ -339,11 +336,11 @@ textarea:focus{
   border-bottom-color:var(--neon-cyan)
 }
 .small{font-size:13px;color:var(--text-muted);font-weight:500}
-select,button{border-radius:4px;padding:10px 14px}
+select,button{border-radius:4px;padding:10px 14px;min-height:44px;min-width:44px;max-width:100%}
 select{
   background:var(--select-bg);color:var(--text-primary);cursor:pointer;
   border:1px solid var(--input-border);font-family:'Rajdhani',sans-serif;
-  font-size:14px;transition:all 0.3s ease
+  font-size:16px;transition:all 0.3s ease
 }
 select option{
   background:var(--cyber-card);
@@ -356,24 +353,24 @@ select:focus{
   box-shadow:0 0 10px var(--shadow-color)
 }
 button{
-  background:linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));
+  background:var(--neon-cyan);
   color:var(--btn-text);border:none;cursor:pointer;font-weight:700;
   transition:all 0.3s ease;font-family:'Rajdhani',sans-serif;
   font-size:14px;text-transform:uppercase;letter-spacing:1px;
   box-shadow:0 0 15px var(--shadow-color);position:relative;overflow:hidden
 }
-button::before{
-  content:'';position:absolute;inset:0;
-  background:var(--btn-hover-solid);
-  opacity:0;transition:opacity 0.3s
-}
-button:hover::before{opacity:1}
+button::before{display:none}
 button:hover{
   transform:translateY(-2px);
   box-shadow:0 0 25px var(--shadow-color);
   color:var(--btn-hover-text)
 }
+button:hover{background:var(--btn-hover-solid)}
+button:disabled{cursor:wait;opacity:0.7}
 button:focus-visible{outline:2px solid var(--neon-cyan);outline-offset:3px}
+.help-icon:focus-visible{outline-offset:-3px}
+[hidden]{display:none !important}
+.guide p{line-height:1.75;font-size:15px}
 button:active{transform:translateY(0)}
 button>*{position:relative;z-index:1}
 button.secondary{
@@ -390,10 +387,12 @@ button.secondary:hover{
 #keyboard-canvas,#profile-canvas{
   background:var(--cyber-surface);
   border:1px solid var(--neon-cyan);border-radius:6px;
-  width:100%;max-width:100%;height:auto;aspect-ratio:1100/420;display:block;
+  width:100%;min-width:960px;height:auto;aspect-ratio:1100/420;display:block;
   box-shadow:0 0 30px var(--shadow-color),inset 0 0 50px var(--shadow-color);
   transition:background 0.5s ease,border-color 0.5s ease
 }
+.keyboard-scroll{overflow-x:auto;max-width:100%;border-radius:6px}
+.keyboard-scroll:focus-visible{outline:2px solid var(--neon-cyan);outline-offset:-2px}
 .results-section{
   background:var(--cyber-card);
   border:2px solid var(--neon-cyan);
@@ -584,18 +583,21 @@ footer a:hover{
   font-weight:600
 }
 
-@media (max-width: 768px) {
-  body{padding:12px}
-  header{gap:6px}
-  h1{font-size:18px}
-  .meta{font-size:12px}
-  .metrics{grid-template-columns:1fr}
-  .controls{gap:6px}
-  select,button{padding:6px 8px;font-size:14px}
-  #keyboard-canvas,#profile-canvas{aspect-ratio:1/1}
+.metrics{grid-template-columns:minmax(0,1fr)}
+.metric,.metric-single{min-width:0}
+.small,.preset-btn,.preset-btn-profile,.label{font-size:14px}
+footer{text-align:center}
+footer a{display:inline-flex;align-items:center;min-height:44px;overflow-wrap:anywhere}
+@media (min-width:600px){
+  body{padding:20px}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-
-@media (min-width: 769px) and (max-width: 1024px) {
-  .app{max-width:100%;padding:0 20px}
-  .metrics{grid-template-columns:repeat(2,1fr)}
+@media (min-width:1000px){
+  .header-top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+  h1{grid-column:2}
+  .header-actions{grid-column:3;justify-self:end}
+  .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
 }
