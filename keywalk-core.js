@@ -152,6 +152,19 @@
     // Fixed presentation order, not a ranking. Each layout maps the unchanged input independently.
     return ['jis', 'qwerty', 'dvorak'].map(layout => analyze(text, layout));
   }
+  function pathSteps(result) {
+    // Preserve every original code-point position, including unmapped boundaries.
+    const points = new Map(result.points.map(point => [point.index, point]));
+    const unknown = new Map(result.unknown.map(point => [point.index, point.char]));
+    return Array.from({length: result.characters}, (_, index) => {
+      const point = points.get(index) || null;
+      const previous = point ? points.get(index - 1) || null : null;
+      const distance = previous ? Math.hypot(point.x - previous.x, point.y - previous.y) : null;
+      const kind = !point ? 'unknown' : !previous ? (index === 0 ? 'start' : 'restart')
+        : distance === 0 ? 'repeat' : adjacent(previous, point) ? 'adjacent' : 'jump';
+      return {index, char: point ? point.char : unknown.get(index), point, previous, distance, kind};
+    });
+  }
   function tallyRules(lines, rules) {
     return rules.map(([id, regex]) => ({id, count: lines.filter(line => regex.test(line)).length})).filter(x => x.count);
   }
@@ -214,5 +227,6 @@
         ? `[U+${cp.toString(16).toUpperCase().padStart(4, '0')}]` : ch;
     }).join('');
   }
-  return {LIMITS, keys, mapText, adjacent, knight, walks, geometry, analyze, compareLayouts, profile, prefixes, suffixes, zones, visible};
+  return {LIMITS, keys, mapText, adjacent, knight, walks, geometry, analyze, compareLayouts, pathSteps,
+    profile, prefixes, suffixes, zones, visible};
 });
