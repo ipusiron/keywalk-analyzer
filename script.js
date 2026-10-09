@@ -335,15 +335,24 @@ function bind(){
   const btnProfile= document.getElementById('tabbtn-profile');
   const paneSingle= document.getElementById('tab-single');
   const paneProfile=document.getElementById('tab-profile');
-  btnSingle.addEventListener('click',()=>{
-    btnSingle.classList.add('active');btnSingle.setAttribute('aria-selected','true');
-    btnProfile.classList.remove('active');btnProfile.setAttribute('aria-selected','false');
-    paneSingle.classList.add('active');paneProfile.classList.remove('active');
-  });
-  btnProfile.addEventListener('click',()=>{
-    btnProfile.classList.add('active');btnProfile.setAttribute('aria-selected','true');
-    btnSingle.classList.remove('active');btnSingle.setAttribute('aria-selected','false');
-    paneProfile.classList.add('active');paneSingle.classList.remove('active');
+  function activate(tab) {
+    for (const [name, button, pane] of [['single',btnSingle,paneSingle], ['profile',btnProfile,paneProfile]]) {
+      const active = name === tab;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+      button.tabIndex = active ? 0 : -1;
+      pane.classList.toggle('active', active);
+      pane.hidden = !active;
+    }
+  }
+  btnSingle.addEventListener('click', () => activate('single'));
+  btnProfile.addEventListener('click', () => activate('profile'));
+  document.querySelector('.tabs').addEventListener('keydown', event => {
+    if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+    event.preventDefault();
+    const single = event.key === 'Home' || (event.key !== 'End' && event.target === btnProfile);
+    activate(single ? 'single' : 'profile');
+    (single ? btnSingle : btnProfile).focus();
   });
 
   // レイアウト切替
@@ -397,9 +406,6 @@ function bind(){
 
 // テーマ切り替え
 function initTheme() {
-  let saved;
-  try { saved = localStorage.getItem('theme'); } catch {}
-  document.documentElement.dataset.theme = saved === 'light' ? 'light' : 'dark';
   document.getElementById('theme-toggle').addEventListener('click', () => {
     const value = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = value;
@@ -416,67 +422,94 @@ function initAccordions(){
       toggle.classList.toggle('active');
       const content = toggle.nextElementSibling;
       content.classList.toggle('active');
+      content.hidden = !content.classList.contains('active');
+      toggle.setAttribute('aria-expanded', String(!content.hidden));
     });
   });
 }
 
 // ツールチップ機能
-function initTooltips(){
-  const helpIcons = document.querySelectorAll('.help-icon');
-
-  // body直下にツールチップコンテナを作成
+function initTooltips() {
   const tooltip = document.createElement('div');
   tooltip.className = 'tooltip-content';
+  tooltip.id = 'help-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  tooltip.hidden = true;
   document.body.appendChild(tooltip);
-
-  helpIcons.forEach(icon => {
-    icon.addEventListener('mouseenter', () => {
-      const text = icon.getAttribute('data-tooltip');
-      if (!text) return;
-
-      tooltip.textContent = text;
-
-      // アイコンの位置を取得
-      const rect = icon.getBoundingClientRect();
-      const tooltipWidth = 280;
-      const gap = 10;
-
-      // 画面の上半分か下半分かで表示位置を決定
-      const isTopHalf = rect.top < window.innerHeight / 2;
-
-      // 左右の位置調整（画面からはみ出さないように）
-      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-      if (left < 10) left = 10;
-      if (left + tooltipWidth > window.innerWidth - 10) {
-        left = window.innerWidth - tooltipWidth - 10;
-      }
-
-      if (isTopHalf) {
-        // アイコンの下に表示
-        tooltip.style.top = `${rect.bottom + gap}px`;
-        tooltip.style.bottom = 'auto';
-        tooltip.classList.remove('tooltip-top');
-        tooltip.classList.add('tooltip-bottom');
-      } else {
-        // アイコンの上に表示
-        tooltip.style.bottom = `${window.innerHeight - rect.top + gap}px`;
-        tooltip.style.top = 'auto';
-        tooltip.classList.remove('tooltip-bottom');
-        tooltip.classList.add('tooltip-top');
-      }
-
-      tooltip.style.left = `${left}px`;
-      tooltip.classList.add('show');
-    });
-
-    icon.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('show');
-    });
+  let owner = null;
+  function hide() {
+    tooltip.hidden = true;
+    tooltip.classList.remove('show');
+    if (owner) owner.removeAttribute('aria-describedby');
+    owner = null;
+  }
+  function show(icon) {
+    hide();
+    owner = icon;
+    tooltip.textContent = icon.dataset.tooltip;
+    tooltip.hidden = false;
+    tooltip.classList.add('show');
+    icon.setAttribute('aria-describedby', tooltip.id);
+    const rect = icon.getBoundingClientRect(), gap = 10;
+    const width = tooltip.getBoundingClientRect().width;
+    const height = tooltip.getBoundingClientRect().height;
+    tooltip.style.left = Math.max(10, Math.min(innerWidth-width-10, rect.left)) + 'px';
+    tooltip.style.top = Math.max(10, Math.min(innerHeight-height-10, rect.bottom+gap)) + 'px';
+  }
+  document.querySelectorAll('.help-icon').forEach(icon => {
+    icon.addEventListener('mouseenter', () => show(icon));
+    icon.addEventListener('mouseleave', () => { if (document.activeElement !== icon) hide(); });
+    icon.addEventListener('focus', () => show(icon));
+    icon.addEventListener('blur', hide);
+    icon.addEventListener('click', () => show(icon));
+  });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') hide(); });
+  document.addEventListener('click', event => { if (!event.target.closest('.help-icon')) hide(); });
+  window.addEventListener('scroll', () => {
+    if (owner && document.activeElement === owner) show(owner);
+    else hide();
+  }, true);
+  window.addEventListener('resize', hide);
+  document.addEventListener('languagechange', hide);
+}
+function initLocale() {
+  const texts = [], attrs = [];
+  const walker = document.createTreeWalker(document.documentElement, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (node.parentElement.closest('script,style')) continue;
+    const source = node.textContent.trim();
+    if (Object.hasOwn(KeyWalkUI.ja, source)) texts.push({node, source, original:node.textContent});
+  }
+  document.querySelectorAll('*').forEach(element => {
+    for (const name of ['aria-label','placeholder','data-tooltip','content']) {
+      const source = element.getAttribute(name);
+      if (source && Object.hasOwn(KeyWalkUI.ja, source.trim())) attrs.push({element, name, source:source.trim()});
+    }
+  });
+  function translate() {
+    const language = document.documentElement.lang;
+    for (const item of texts) item.node.textContent = item.original.replace(item.source, KeyWalkUI[language][item.source]);
+    for (const item of attrs) item.element.setAttribute(item.name, KeyWalkUI[language][item.source]);
+    document.querySelectorAll('.help-icon').forEach(icon => icon.setAttribute('aria-label', t('help')));
+    const button = document.getElementById('language-toggle');
+    button.textContent = language === 'ja' ? 'English' : '日本語';
+    button.setAttribute('aria-label', t('toggleLanguage'));
+  }
+  translate();
+  document.getElementById('language-toggle').addEventListener('click', () => {
+    const language = document.documentElement.lang === 'ja' ? 'en' : 'ja';
+    document.documentElement.lang = language;
+    try { localStorage.setItem('language', language); } catch {}
+    translate();
+    document.dispatchEvent(new Event('languagechange'));
+    renderAll();
   });
 }
 
 // 初期化
 (function init(){
+  initLocale();
   initTheme();
   setupCanvas(canvas);
   setupCanvas(pcanvas);
