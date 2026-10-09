@@ -4,6 +4,21 @@
   else root.KeyWalkMessages = messages;
 })(globalThis, function() {
   return {ja: {
+    sampleHeading:'学習用サンプル', sampleLabel:'典型例を選ぶ', sampleLoad:'読み込んで分析',
+    sampleNote:'選択だけでは入力を変えません。読み込むと入力を置き換えます。数字も選択中の配列で分析し、テンキーやATMの配置は扱いません。',
+    samplePreview:'入力例：{text}（{description}）', sampleLoaded:'典型例を読み込み、分析しました。逐次表示は最初の文字から確認できます。',
+    sampleLength:'{count}文字', sample_group_walk:'歩きと往復', sample_group_digits:'数字と反復',
+    sample_group_mixed:'単語と混在', sample_group_gap:'経路の区切り',
+    sample_walk1:'歩き①（配列別）', sample_walk2:'歩き②（配列別）', sample_common:'一般的な語の置換例',
+    sample_dict:'辞書系の例', sample_strong:'固定の混在例', sample_digitsUp:'数字の順並び', sample_digitsDown:'数字の逆並び',
+    sample_sameDigit:'同じ数字', sample_alternating:'2つの数字を交互に', sample_digitCycle:'数字列の反復',
+    sample_vertical:'縦方向に近い並び（JIS/US）', sample_roundTrip:'英字の往復（JIS/US）', sample_gap:'空白による区切り',
+    randomHeading:'ランダムな学習用入力', randomKind:'文字種', randomLength:'文字数', randomGenerate:'生成して分析',
+    random_digits:'数字のみ（0–9）', random_alphanumeric:'英数字（0–9、A–Z、a–z）',
+    randomNote:'生成すると入力を置き換えます。各文字を独立に選ぶため、重複や同じ生成結果もあり、英数字の両方を含む保証はありません。'
+      + '認証には使わず、経路の比較用にしてください。安全性の判定はしません。',
+    randomGenerated:'{count}文字を生成して分析しました。逐次表示は最初の文字から確認できます。',
+    randomUnavailable:'生成できませんでした。入力と分析結果は変更していません。典型例を利用できます。',
     stepTitle: '経路を1文字ずつ確認',
     stepNote: '枠は現在のキー、線は直前からの移動です。元の文字位置を追う表示で、打鍵記録ではありません。'
       + '全体の分析値は変わりません。閉じると全体図に戻ります。',
@@ -77,6 +92,22 @@
     error: '分析できませんでした。入力と配列を確認してください。',
     help: '説明を開く', toggleLanguage: '言語を切り替える'
   }, en: {
+    sampleHeading:'Learning samples', sampleLabel:'Choose a typical example', sampleLoad:'Load and analyze',
+    sampleNote:'Selecting an example does not change the input. Loading replaces it. Digits use the selected keyboard layout, not a numpad or ATM keypad.',
+    samplePreview:'Example: {text} ({description})', sampleLoaded:'Example loaded and analyzed. Step inspection starts at the first character.',
+    sampleLength:'{count} characters', sample_group_walk:'Walks and return paths', sample_group_digits:'Digits and repetition',
+    sample_group_mixed:'Words and mixed characters', sample_group_gap:'Path breaks',
+    sample_walk1:'Walk 1 (layout-specific)', sample_walk2:'Walk 2 (layout-specific)', sample_common:'Common-word substitutions',
+    sample_dict:'Word-based example', sample_strong:'Fixed mixed example', sample_digitsUp:'Digits in forward order',
+    sample_digitsDown:'Digits in reverse order', sample_sameDigit:'Same digit repeated', sample_alternating:'Two alternating digits',
+    sample_digitCycle:'Repeated digit sequence', sample_vertical:'Near-vertical sequence (JIS/US)',
+    sample_roundTrip:'Letter return path (JIS/US)', sample_gap:'Break at a space',
+    randomHeading:'Random learning input', randomKind:'Character set', randomLength:'Length', randomGenerate:'Generate and analyze',
+    random_digits:'Digits only (0–9)', random_alphanumeric:'0–9 / A–Z / a–z',
+    randomNote:'Generating replaces the input. Characters are selected independently: repetitions and identical results are possible, '
+      + 'and a mix of letters and digits is not guaranteed. Use these for path comparisons, not authentication. No security assessment is made.',
+    randomGenerated:'Generated and analyzed {count} characters. Step inspection starts at the first character.',
+    randomUnavailable:'Generation failed. Your input and analysis results are unchanged. You can use a typical example instead.',
     stepTitle: 'Inspect the path one character at a time',
     stepNote: 'The outline marks the current key; the line shows its incoming move. These are input positions, not recorded keystrokes. '
       + 'Overall results stay unchanged. Close to restore the overview.',

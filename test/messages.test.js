@@ -2,6 +2,18 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const messages = require('../keywalk-messages.js');
 const ui = require('../keywalk-ui-messages.js');
+test('sample categories, examples and random controls have complete localized text', () => {
+  const S = require('../keywalk-samples.js');
+  const keys = ['sampleHeading','sampleLabel','sampleLoad','sampleNote','samplePreview','sampleLoaded','sampleLength',
+    'randomHeading','randomKind','randomLength','randomGenerate','randomNote','randomGenerated','randomUnavailable'];
+  for (const group of S.groups) keys.push('sample_group_' + group.id, ...group.items.map(id => 'sample_' + id));
+  keys.push(...Object.keys(S.alphabets).map(kind => 'random_' + kind));
+  for (const key of keys) {
+    assert.ok(messages.ja[key], key);
+    assert.ok(messages.en[key], key);
+    assert.doesNotMatch(messages.en[key], /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u);
+  }
+});
 test('step navigation, positions and every classification are translated', () => {
   const keys = ['stepTitle', 'stepNote', 'stepPosition', ...['first', 'prev', 'next', 'last'].map(k => 'step_' + k),
     ...['start', 'restart', 'unknown', 'repeat', 'adjacent', 'jump'].map(k => 'step_kind_' + k)];

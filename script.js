@@ -1,5 +1,7 @@
 /* KeyWalk Analyzer: DOM rendering over the independent KeyWalkCore model. */
 const Core = KeyWalkCore;
+const Samples = KeyWalkSamples;
+const sampleState = {notice: '', args: {}};
 const state = {single: null, comparison: null, profile: null, singleNotice: '', profileNotice: ''};
 const stepState = {steps: [], index: 0};
 const composing = {single: false, profile: false};
@@ -414,37 +416,57 @@ function renderCalculation() {
   }
   body.append(textElement('p', t('reference')));
 }
-function renderAll() { renderSingle(); renderProfile(); renderComparison(); renderCalculation(); renderSteps(); drawResults(); }
+function renderAll() {
+  renderSingle(); renderProfile(); renderComparison(); renderCalculation(); renderSteps(); renderSamples(); drawResults();
+}
 function invalidate(tab) {
+  if (tab === 'single') sampleState.notice = '';
   if (tab === 'single') resetSingle(); else resetProfileMetrics();
   state[tab + 'Notice'] = 'dirty';
   renderAll();
 }
 
-// プリセットデータ（レイアウト別）
-const PRESETS_SINGLE = {
-  'qwerty': {
-    'walk1': 'qwerty123',        // QWERTY上段歩き
-    'walk2': 'asdfgh',           // QWERTY中段直線
-    'common': 'P@ssw0rd!',       // 一般的パターン
-    'dict': 'Tr0ub4dor&3',       // 辞書+置換
-    'strong': 'xK9#mQ2$vL'       // ランダム風
-  },
-  'jis': {
-    'walk1': 'qwerty123',        // JIS上段歩き
-    'walk2': 'asdfghjkl',        // JIS中段歩き
-    'common': 'P@ssw0rd!',       // 一般的パターン
-    'dict': 'Sakura2024!',       // 日本語由来
-    'strong': 'xK9#mQ2$vL'       // ランダム風
-  },
-  'dvorak': {
-    'walk1': '123456',           // 数字列
-    'walk2': 'aoeu',             // Dvorakホームポジション
-    'common': 'P@ssw0rd!',       // 一般的パターン
-    'dict': 'Tr0ub4dor&3',       // 辞書+置換
-    'strong': 'xK9#mQ2$vL'       // ランダム風
+function renderSamples() {
+  const selector = document.getElementById('sample-select'), selected = selector.value || 'walk1';
+  selector.replaceChildren();
+  for (const group of Samples.groups) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = t('sample_group_' + group.id);
+    for (const id of group.items) {
+      const option = textElement('option', t('sample_' + id));
+      option.value = id;
+      optgroup.append(option);
+    }
+    selector.append(optgroup);
   }
-};
+  selector.value = selected;
+  for (const [id, entries, fallback] of [
+    ['random-kind', Object.keys(Samples.alphabets).map(key => [key, t('random_' + key)]), 'alphanumeric'],
+    ['random-length', Samples.lengths.map(n => [String(n), t('sampleLength', {count:n})]), '12']
+  ]) {
+    const select = document.getElementById(id), value = select.value || fallback;
+    select.replaceChildren();
+    for (const [key, label] of entries) {
+      const option = textElement('option', label);
+      option.value = key;
+      select.append(option);
+    }
+    select.value = value;
+  }
+  for (const [id, key] of [['sample-heading','sampleHeading'], ['sample-label','sampleLabel'], ['load-sample','sampleLoad'],
+    ['sample-note','sampleNote'], ['random-heading','randomHeading'], ['random-kind-label','randomKind'],
+    ['random-length-label','randomLength'], ['generate-sample','randomGenerate'], ['random-note','randomNote']]) setText(id, t(key));
+  const value = Samples.single(document.getElementById('layout').value, selected);
+  setText('sample-preview', t('samplePreview', {text:Core.visible(value), description:t('sample_' + selected)}));
+  setText('sample-feedback', sampleState.notice ? t(sampleState.notice, sampleState.args) : '');
+  for (const id of ['load-sample', 'generate-sample']) document.getElementById(id).disabled = composing.single;
+}
+function replaceWithSample(text, notice, args = {}) {
+  document.getElementById('pwd').value = text;
+  sampleState.notice = notice;
+  sampleState.args = args;
+  analyzeSingle();
+}
 
 const PRESETS_PROFILE = {
   'qwerty': {
@@ -521,18 +543,28 @@ function bind(){
   document.getElementById('analyze').addEventListener('click', analyzeSingle);
   document.getElementById('clear').addEventListener('click', ()=>{
     document.getElementById('pwd').value=''; resetSingle();
+    sampleState.notice = '';
     state.singleNotice = ''; renderAll();
   });
 
-  // 単体プリセット（レイアウト別）
-  document.querySelectorAll('.preset-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const preset = btn.getAttribute('data-preset');
-      const layout = document.getElementById('layout').value;
-      const presetData = PRESETS_SINGLE[layout];
-      document.getElementById('pwd').value = presetData ? (presetData[preset] || '') : '';
-      analyzeSingle();
-    });
+  document.getElementById('sample-select').addEventListener('change', renderSamples);
+  document.getElementById('load-sample').addEventListener('click', () => {
+    if (composing.single) return;
+    const text = Samples.single(document.getElementById('layout').value, document.getElementById('sample-select').value);
+    replaceWithSample(text, 'sampleLoaded');
+  });
+  document.getElementById('generate-sample').addEventListener('click', () => {
+    if (composing.single) return;
+    let text;
+    try {
+      text = Samples.random(document.getElementById('random-kind').value, Number(document.getElementById('random-length').value));
+    } catch {
+      sampleState.notice = 'randomUnavailable';
+      sampleState.args = {};
+      renderSamples();
+      return;
+    }
+    replaceWithSample(text, 'randomGenerated', {count:text.length});
   });
 
   // プロファイル
@@ -660,6 +692,7 @@ function initLocale() {
 // 初期化
 (function init(){
   initLocale();
+  renderSamples();
   initTheme();
   setupCanvas(canvas);
   setupCanvas(pcanvas);

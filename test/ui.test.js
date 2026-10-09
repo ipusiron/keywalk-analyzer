@@ -3,6 +3,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const read = name => fs.readFileSync(path.join(__dirname,'..',name),'utf8');
+test('samples use labelled selects and separate explicit load and generate buttons', () => {
+  const html = read('index.html'), css = read('style.css');
+  for (const id of ['sample-select','random-kind','random-length']) {
+    assert.match(html, new RegExp('for="' + id + '"'));
+    assert.match(html, new RegExp('<select id="' + id + '"'));
+  }
+  for (const id of ['load-sample','generate-sample']) assert.match(html, new RegExp('<button type="button" id="' + id + '"'));
+  assert.match(html, /id="sample-feedback" role="status" aria-live="polite"/);
+  assert.match(css, /\.sample-picker,\.random-controls\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+  assert.ok(html.indexOf('./keywalk-samples.js') < html.indexOf('./script.js'));
+});
 test('step inspector uses native disclosure, live text and four bounded touch controls', () => {
   const html = read('index.html'), css = read('style.css');
   assert.match(html, /<details[^>]*id="path-inspector"[^>]*hidden/);
